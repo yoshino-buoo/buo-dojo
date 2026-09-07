@@ -4,6 +4,7 @@ const files = [
   "styles.css",
   "app.js",
   "breath.js",
+  "haptics.js",
   "config.js",
   "share.js",
   "share-card.js",

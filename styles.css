@@ -177,6 +177,61 @@ button:not(:disabled):active,
   width: 18px;
   height: 18px;
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vibration-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  padding: 0 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.vibration-button .icon {
+  width: 16px;
+  height: 16px;
+}
+.vibration-switch {
+  width: 22px;
+  height: 13px;
+  padding: 2px;
+  border-radius: 10px;
+  background: #d9cdbf;
+  transition: background 0.18s;
+}
+.vibration-switch::after {
+  content: "";
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fffdf8;
+  box-shadow: 0 1px 2px #66493825;
+  transition: transform 0.18s;
+}
+.vibration-button[aria-pressed="true"] {
+  color: var(--teal);
+  border-color: #a6cfc7;
+  background: #e6f2eb;
+}
+.vibration-button[aria-pressed="true"] .vibration-switch {
+  background: var(--teal);
+}
+.vibration-button[aria-pressed="true"] .vibration-switch::after {
+  transform: translateX(9px);
+}
+.vibration-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.vibration-button:disabled .vibration-switch {
+  display: none;
+}
 .title-logo {
   display: block;
   width: calc(100% + 20px);

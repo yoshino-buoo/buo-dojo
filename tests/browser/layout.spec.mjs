@@ -311,7 +311,7 @@ test("charging and the final animation keep the stage fixed before mastery resul
   await expect(page.locator("#result-overline")).toHaveText("本日の、ひと吹き");
 });
 
-test("charging reaches a 0.2-second period over about twelve real animation cycles", async ({
+test("charging reaches a 0.2-second period with one haptic pulse per real animation cycle", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 852 });
@@ -319,6 +319,21 @@ test("charging reaches a 0.2-second period over about twelve real animation cycl
   // Skip the ordinary phase in both clocks, then measure real compositor time.
   // Playwright's fake clock alone does not advance CSS animations.
   await page.addInitScript(() => {
+    window.hapticCalls = [];
+    Object.defineProperty(navigator, "vibrate", {
+      value: (duration) => {
+        const timing = document
+          .querySelector(".character-c")
+          ?.getAnimations()[0]
+          ?.effect.getComputedTiming();
+        window.hapticCalls.push({
+          duration,
+          time: document.timeline.currentTime,
+          progress: timing?.progress,
+        });
+        return true;
+      },
+    });
     const now = performance.now.bind(performance);
     const frame = requestAnimationFrame.bind(window);
     let offset = 0;
@@ -336,6 +351,7 @@ test("charging reaches a 0.2-second period over about twelve real animation cycl
     };
   });
   await page.goto("/");
+  await page.locator("#vibration-button").click();
   await page.locator("#demo-button").click();
   await page.locator("#hold-button").focus();
   await page.keyboard.down("Space");
@@ -352,6 +368,7 @@ test("charging reaches a 0.2-second period over about twelve real animation cycl
             seconds: (last.time - first.time) / 1000,
             cycles: last.phase - first.phase,
             finalPeriod: last.period,
+            hapticCalls: window.hapticCalls,
           });
           return;
         }
@@ -376,7 +393,27 @@ test("charging reaches a 0.2-second period over about twelve real animation cycl
   expect(motion.cycles).toBeLessThan(13.1);
   expect(motion.finalPeriod).toBeGreaterThanOrEqual(0.2);
   expect(motion.finalPeriod).toBeLessThan(0.22);
+  const pulses = motion.hapticCalls.filter((call) => call.duration > 0);
+  expect(pulses.length).toBeGreaterThanOrEqual(11);
+  expect(pulses.length).toBeLessThanOrEqual(13);
+  expect(pulses.every((pulse) => pulse.duration === 10)).toBe(true);
+  // Ignore the phase skip itself; subsequent pulses coincide with expansion peaks.
+  expect(
+    pulses
+      .slice(1)
+      .every((pulse) => pulse.progress >= 0.5 && pulse.progress < 0.7),
+  ).toBe(true);
+  const gaps = pulses
+    .slice(1)
+    .map((pulse, index) => pulse.time - pulses[index].time);
+  expect(gaps.at(-1)).toBeGreaterThanOrEqual(180);
+  expect(gaps.at(-1)).toBeLessThan(270);
+  expect(gaps.at(-1)).toBeLessThan(gaps[1] * 0.65);
+  expect(motion.hapticCalls.at(-1).duration).toBe(0);
   await expect(page.locator("#result-dialog")).toBeVisible();
+  expect(await page.evaluate(() => window.hapticCalls.length)).toBe(
+    motion.hapticCalls.length,
+  );
   await expect(page.locator("#result-stamp")).toHaveText("皆伝");
   await expect(page.locator("#result-overline")).toHaveText("本日の、ひと吹き");
   await page.locator("#again-button").click();

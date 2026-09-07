@@ -1,5 +1,6 @@
 import { CONFIG } from "./config.js";
 import { createResultSharing } from "./share.js";
+import { createBlowHaptics } from "./haptics.js";
 import {
   BreathDetector,
   analyzeSignal,
@@ -10,6 +11,15 @@ import {
 
 const $ = (id) => document.getElementById(id);
 const resultSharing = createResultSharing();
+const haptics = createBlowHaptics(
+  typeof navigator.vibrate === "function"
+    ? navigator.vibrate.bind(navigator)
+    : null,
+  () => {
+    updateVibrationToggle();
+    toast("この環境では振動を使えません。");
+  },
+);
 const secondsText = (ms) => (Math.floor(ms / 100) / 10).toFixed(1);
 const characters = [...document.querySelectorAll(".character")];
 const activeStates = [
@@ -136,6 +146,7 @@ function updateMeter(level) {
 }
 
 function stopResources() {
+  haptics.stop();
   generation++;
   cancelAnimationFrame(frameId);
   clearTimeout(hintTimer);
@@ -261,6 +272,14 @@ function advanceRound(elapsedMs) {
   }
   $("live-count").textContent = String(round.glyphs.length);
   $("live-time").textContent = secondsText(round.elapsedMs);
+  if (
+    state === "blowing" &&
+    !progress.complete &&
+    !document.hidden &&
+    document.hasFocus?.() !== false
+  )
+    haptics.update(round.animation, performance.now());
+  else haptics.stop();
 }
 
 function finishRound(elapsedMs = round?.elapsedMs, detail = "") {
@@ -530,6 +549,27 @@ function interruptRound() {
   if (state === "celebrating") showResult();
 }
 
+function updateVibrationToggle() {
+  const button = $("vibration-button");
+  button.disabled = !haptics.supported;
+  button.setAttribute("aria-pressed", String(haptics.enabled));
+  button.setAttribute(
+    "aria-label",
+    haptics.supported
+      ? `振動：${haptics.enabled ? "オン" : "オフ"}`
+      : "振動：このブラウザは非対応です",
+  );
+  button.title = haptics.supported
+    ? "吹いている間、芳乃の動きに合わせて軽く振動します"
+    : "このブラウザは振動に対応していません";
+  $("vibration-label").textContent = haptics.supported ? "振動" : "振動 ×";
+}
+updateVibrationToggle();
+$("vibration-button").addEventListener("click", () => {
+  haptics.setEnabled(!haptics.enabled);
+  updateVibrationToggle();
+});
+
 $("start-button").addEventListener("click", startMicrophone);
 $("demo-button").addEventListener("click", () => {
   prepareDemo();
@@ -652,6 +692,7 @@ window.addEventListener("pageshow", (event) => {
   if (event.persisted && activeStates.includes(state)) reset();
 });
 window.addEventListener("blur", () => {
+  haptics.stop();
   if (mode === "demo" && state === "blowing") endHold();
 });
 
