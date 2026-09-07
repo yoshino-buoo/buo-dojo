@@ -185,9 +185,11 @@ test("trailing silence cannot earn the final glyph after breath stops at 24.9 se
   detector.update(1000, wind);
   detector.update(1200, wind);
   detector.update(25900, wind);
-  const end = detector.update(26000, quiet);
+  assert.equal(detector.update(26000, quiet).type, "blowing");
+  const end = detector.update(26650, quiet);
   assert.equal(end.type, "end");
   assert.equal(end.durationMs, 24900);
+  assert.equal(end.capped, false);
   assert.equal(roundProgress(end.durationMs).complete, false);
   assert.equal(glyphsForDuration(end.durationMs).length, 30);
 });
@@ -244,9 +246,11 @@ test("hidden microphone limit excludes trailing silence and preserves only earne
   detector.update(1000, wind);
   detector.update(1200, wind);
   assert.equal(detector.update(73900, wind).type, "blowing");
-  const end = detector.update(74000, quiet);
+  assert.equal(detector.update(74000, quiet).type, "blowing");
+  const end = detector.update(74650, quiet);
   assert.equal(end.type, "end");
   assert.equal(end.durationMs, 72900);
+  assert.equal(end.capped, false);
   assert.deepEqual(roundProgress(end.durationMs, TRAINING_CONFIG).earned, [
     "依",
     "田",
@@ -254,3 +258,25 @@ test("hidden microphone limit excludes trailing silence and preserves only earne
   ]);
   assert.equal(roundProgress(end.durationMs, TRAINING_CONFIG).complete, false);
 });
+
+for (const course of [CONFIG, TRAINING_CONFIG]) {
+  test(`a brief dip across the ${course.maxBlowSeconds}-second boundary can recover within the normal silence window`, () => {
+    const limit = course.maxBlowSeconds * 1000;
+    const detector = calibrated({ maxDurationMs: limit });
+    detector.update(1000, wind);
+    detector.update(1200, wind);
+    detector.update(1000 + limit - 100, wind);
+    const dip = detector.update(1000 + limit, quiet);
+    assert.equal(dip.type, "blowing");
+    assert.equal(dip.durationMs, limit - 100);
+    const end = detector.update(1000 + limit + 20, wind);
+    assert.equal(end.type, "end");
+    assert.equal(end.capped, true);
+    assert.equal(end.durationMs, limit);
+    assert.equal(roundProgress(end.durationMs, course).complete, true);
+    assert.equal(
+      glyphsForDuration(end.durationMs, course).at(-1),
+      course === TRAINING_CONFIG ? "乃" : "芳",
+    );
+  });
+}

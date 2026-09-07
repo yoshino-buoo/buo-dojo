@@ -282,16 +282,16 @@ export class BreathDetector {
       return { type: "listening", level };
     }
     if (active) this.lastActiveAt = now;
-    if (
-      now - this.startedAt >= this.maxDurationMs ||
-      now - this.lastActiveAt >= this.endSilenceMs
-    ) {
+    // Use the measured breath duration for both completion and its reason.
+    // A quiet frame at the limit still gets the usual short recovery window.
+    const capped = this.durationMs >= this.maxDurationMs;
+    if (capped || now - this.lastActiveAt >= this.endSilenceMs) {
       this.state = "ended";
       return {
         type: "end",
         level: 0,
         durationMs: this.durationMs,
-        capped: now - this.startedAt >= this.maxDurationMs,
+        capped,
       };
     }
     return { type: "blowing", level, durationMs: this.durationMs };

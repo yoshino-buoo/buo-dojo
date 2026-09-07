@@ -546,6 +546,65 @@ test("hidden microphone uses the 73-second course, stops resources, and retains 
   }
 });
 
+for (const training of [false, true]) {
+  for (const recovers of [false, true]) {
+    const limit = training ? 73000 : 25000;
+    test(`microphone boundary at ${limit}ms ${recovers ? "recovers to completion" : "retains a stopped breath without a misleading limit message"}`, async () => {
+      const env = await setup();
+      try {
+        const fixture = streamFixture();
+        env.navigator.mediaDevices = {
+          getUserMedia: async () => fixture.stream,
+        };
+        if (training) await env.$("training-toggle").emit("click");
+        await env.$("start-button").emit("click");
+        env.tick(0);
+        env.tick(800);
+        env.window.wind = true;
+        env.tick(1000);
+        env.tick(1200);
+        env.tick(1000 + limit - 100);
+        env.window.wind = false;
+        env.tick(1000 + limit);
+        assert.equal(env.state, "blowing");
+        assert.equal(fixture.track.stopped, false);
+        if (recovers) {
+          env.window.wind = true;
+          env.tick(1000 + limit + 20);
+          assert.equal(env.state, "celebrating");
+          env.runTimers(4200);
+        } else {
+          env.tick(1000 + limit + 650);
+        }
+        assert.equal(env.state, "result");
+        assert.equal(env.$("result-dialog").dataset.mastery, String(recovers));
+        assert.equal(
+          env.$("result-time").textContent,
+          ((limit - (recovers ? 0 : 100)) / 1000).toFixed(1),
+        );
+        assert.equal(
+          env.$("result-count").textContent,
+          String((training ? 73 : 31) - (recovers ? 0 : 1)),
+        );
+        assert.equal(env.$("result-detail").hidden, true);
+        if (recovers) {
+          assert.equal(
+            env.$("result-final-kanji").textContent,
+            training ? "依田芳乃" : "芳",
+          );
+        } else {
+          assert.equal(env.$("result-detail").textContent, "");
+        }
+        assert.equal(fixture.track.stopped, true);
+        assert.equal(env.contexts[0].state, "closed");
+        assert.equal(env.frames.size, 0);
+      } finally {
+        env.restore();
+      }
+    });
+  }
+}
+
 test("leaving hidden training on a milestone awards it once and does not grant completion", async () => {
   const env = await setup();
   try {
