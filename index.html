@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#fffaf3" />
+    <meta
+      name="description"
+      content="芳乃といっしょに、ぶおー。スマホにふーっと息を吹きかける、小さな法螺貝あそび。あなたのひと息から、どんな漢字が生まれるでしょう。"
+    />
+    <meta property="og:title" content="ぶおー法螺貝道場" />
+    <meta
+      property="og:description"
+      content="芳乃といっしょに、ぶおー！スマホで遊べる法螺貝ゲーム。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yoshino-buoo.github.io/buo-dojo/" />
+    <meta
+      property="og:image"
+      content="https://yoshino-buoo.github.io/buo-dojo/assets/link-preview.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ぶおー法螺貝道場 — 武・謳・鶯・王" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ぶおー法螺貝道場" />
+    <meta
+      name="twitter:description"
+      content="スマホにふーっと！法螺貝を吹いて、漢字を奏でよう。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://yoshino-buoo.github.io/buo-dojo/assets/link-preview.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="ぶおー法螺貝道場 — 武・謳・鶯・王"
+    />
+    <link rel="canonical" href="https://yoshino-buoo.github.io/buo-dojo/" />
+    <title>ぶおー法螺貝道場</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="./assets/fonts/dojo-kanji.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="preload" href="./assets/title-logo-transparent.png" as="image" />
+    <link rel="preload" href="./assets/character%20A.PNG" as="image" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <svg
+      class="icon-definitions"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <symbol id="icon-mic" viewBox="0 0 24 24">
+          <rect x="9" y="2" width="6" height="12" rx="3" />
+          <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8" />
+        </symbol>
+        <symbol id="icon-arrow" viewBox="0 0 24 24">
+          <path d="M5 12h14m-6-6 6 6-6 6" />
+        </symbol>
+        <symbol id="icon-repeat" viewBox="0 0 24 24">
+          <path
+            d="M20 7v5h-5M4 17v-5h5M6.5 6.5A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.5 5.5"
+          />
+        </symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24">
+          <path
+            d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"
+          />
+        </symbol>
+        <symbol id="icon-share" viewBox="0 0 24 24">
+          <path
+            d="M12 16V3m-5 5 5-5 5 5M5 13v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"
+          />
+        </symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24">
+          <path
+            fill="currentColor"
+            stroke="none"
+            d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L.8 2h6.5l4.5 6.7L18.9 2Zm-1.1 18h1.7L6.4 3.9H4.6L17.8 20Z"
+          />
+        </symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M6 18 18 6" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <main class="dojo" id="dojo" data-state="idle">
+      <header class="masthead">
+        <div class="topline">
+          <span class="header-ornament" aria-hidden="true"
+            ><span>✿</span><span>✧</span><span>✿</span></span
+          ><button
+            class="round-button"
+            id="help-button"
+            aria-label="あそびかたを開く"
+          >
+            ？
+          </button>
+        </div>
+        <h1>
+          <img
+            class="title-logo"
+            src="./assets/title-logo-transparent.png"
+            alt="ぶおー法螺貝道場"
+            width="2172"
+            height="724"
+            fetchpriority="high"
+          />
+        </h1>
+      </header>
+
+      <section class="stage" aria-label="芳乃の法螺貝道場">
+        <div class="stage-arch" aria-hidden="true"></div>
+        <div class="orbit orbit-one" aria-hidden="true"></div>
+        <div class="orbit orbit-two" aria-hidden="true"></div>
+        <span class="stage-spark spark-one" aria-hidden="true">✧</span
+        ><span class="stage-spark spark-two" aria-hidden="true">✦</span
+        ><span class="stage-spark spark-three" aria-hidden="true">✧</span>
+        <span class="vertical-note" aria-hidden="true"
+          >のんびり、ふーっと。</span
+        >
+        <div class="name-seal" aria-label="依田芳乃">
+          <span>依田</span><strong>芳乃</strong>
+        </div>
+        <div class="speech" id="speech" role="status">
+          そなたも、ご一緒にー<span aria-hidden="true">♪</span>
+        </div>
+        <div class="character-shadow" aria-hidden="true"></div>
+        <div class="character character-a">
+          <img
+            src="./assets/character%20A.PNG"
+            width="1206"
+            height="1304"
+            alt="法螺貝を持って、ゆらゆら揺れる芳乃"
+            draggable="false"
+          />
+        </div>
+        <div class="character character-b" hidden>
+          <img
+            src="./assets/character%20B.PNG"
+            width="1148"
+            height="1370"
+            alt="法螺貝を構えて待つ芳乃"
+            draggable="false"
+          />
+        </div>
+        <div class="character character-c" hidden>
+          <img
+            src="./assets/character%20C.PNG"
+            width="1222"
+            height="1287"
+            alt="ぶおーっと法螺貝を吹く芳乃"
+            draggable="false"
+          />
+        </div>
+        <div class="kanji-particles" id="particles" aria-hidden="true"></div>
+        <div class="charge-cue" id="charge-cue" hidden>
+          <span class="charge-caption">最後のひと吹き</span>
+          <div class="charge-flowers" aria-hidden="true">
+            <span id="charge-flower-1">✿</span
+            ><span id="charge-flower-2">✿</span>
+            <span id="charge-flower-3">✿</span
+            ><span id="charge-flower-4">✿</span>
+            <span id="charge-flower-5">✿</span>
+          </div>
+          <span class="charge-countdown"
+            >あと <strong id="charge-remaining">5</strong> 秒</span
+          >
+        </div>
+        <div class="charge-orbit" id="charge-orbit" aria-hidden="true" hidden>
+          <i style="--i: 0"></i><i style="--i: 1"></i><i style="--i: 2"></i>
+          <i style="--i: 3"></i><i style="--i: 4"></i><i style="--i: 5"></i>
+        </div>
+        <div class="finale-effect" id="finale-effect" aria-hidden="true" hidden>
+          <span class="finale-ripple"></span
+          ><span class="finale-ripple ripple-two"></span>
+          <span class="finale-kanji" id="finale-kanji">芳</span>
+          <span
+            class="finale-petal"
+            style="--x: -105px; --y: -86px; --r: -50deg"
+            >✿</span
+          >
+          <span class="finale-petal" style="--x: 108px; --y: -115px; --r: 65deg"
+            >✿</span
+          >
+          <span class="finale-petal" style="--x: -55px; --y: -155px; --r: 35deg"
+            >✧</span
+          >
+          <span class="finale-petal" style="--x: 145px; --y: -28px; --r: -25deg"
+            >✧</span
+          >
+          <span class="finale-petal" style="--x: -82px; --y: 40px; --r: 70deg"
+            >✧</span
+          >
+          <span class="finale-petal" style="--x: 88px; --y: 60px; --r: -65deg"
+            >✿</span
+          >
+        </div>
+        <div class="session-counter" id="session-counter" hidden>
+          <span id="live-count">0</span> 文字
+          <span class="counter-divider">/</span>
+          <span id="live-time">0.0</span> 秒
+        </div>
+      </section>
+
+      <section class="play-panel" aria-label="あそぶ">
+        <div class="status-line">
+          <span class="status-dot" id="status-dot" aria-hidden="true"></span>
+          <p id="status-text" role="status">準備ができたら、はじめましょう</p>
+        </div>
+        <div class="breath-meter" id="breath-meter" hidden>
+          <span>息のつよさ</span>
+          <div
+            class="meter-track"
+            role="meter"
+            aria-label="息のつよさ"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            id="meter"
+          >
+            <span id="meter-fill"></span>
+          </div>
+          <span class="meter-end" aria-hidden="true">ふー</span>
+        </div>
+        <button class="primary-button blow-button" id="start-button">
+          <svg class="icon" aria-hidden="true"><use href="#icon-mic" /></svg
+          ><span id="start-label">法螺貝を吹く</span
+          ><svg class="icon button-arrow" aria-hidden="true">
+            <use href="#icon-arrow" />
+          </svg>
+        </button>
+        <button class="primary-button hold-button" id="hold-button" hidden>
+          <span aria-hidden="true">✧</span> 押しているあいだ、ぶおー！
+        </button>
+        <p class="button-note" id="button-note">
+          マイクを許可して、スマホにふーっと。
+        </p>
+        <button class="text-button demo-toggle" id="demo-button">
+          マイクなしでおためし <span aria-hidden="true">↗</span>
+        </button>
+        <div class="session-tools" id="session-tools" hidden>
+          <label for="sensitivity">マイク感度</label
+          ><input
+            id="sensitivity"
+            type="range"
+            min="0"
+            max="100"
+            value="100"
+            aria-label="マイク感度"
+          /><button class="text-button" id="cancel-button">やめる</button>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <small class="site-disclaimer"
+          >このサイトはバンダイナムコエンターテインメント株式会社および各関連企業・団体とは一切関係ありません。</small
+        >
+        <small class="site-copyright"
+          >THE IDOLM@STER™ &amp; ©Bandai Namco Entertainment Inc.</small
+        >
+      </footer>
+    </main>
+
+    <dialog
+      class="modal result-modal"
+      id="result-dialog"
+      aria-labelledby="result-title"
+    >
+      <div class="result-top">
+        <span class="result-overline" id="result-overline"
+          >本日の、ひと吹き</span
+        ><button
+          class="round-button close-button"
+          id="result-close"
+          aria-label="結果を閉じる"
+        >
+          <svg class="icon"><use href="#icon-close" /></svg>
+        </button>
+        <h2 id="result-title">お疲れさまでした</h2>
+        <p id="result-message">よき響きでしてー。</p>
+        <div class="result-stamp" id="result-stamp" aria-hidden="true">
+          大変<br />よき音
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="result-label">
+          そなたが奏でた漢字
+          <span><strong id="result-count">0</strong> 文字</span>
+        </div>
+        <div class="result-collection">
+          <div
+            class="result-kanji"
+            id="result-kanji"
+            aria-label="今回吹き出した漢字"
+          ></div>
+          <div class="mastery-award" id="mastery-award" hidden>
+            <span>最後の一文字</span>
+            <strong id="result-final-kanji"></strong>
+            <span class="award-flower" aria-hidden="true">✿</span>
+          </div>
+        </div>
+        <div class="time-result">
+          <span class="time-label"
+            >吹いた時間<span class="mode-badge" id="result-mode" hidden
+              >おためし</span
+            ></span
+          >
+          <div><strong id="result-time">0.0</strong><span>秒</span></div>
+        </div>
+        <p class="result-detail" id="result-detail" hidden></p>
+        <button class="primary-button" id="again-button">
+          <svg class="icon" aria-hidden="true"><use href="#icon-repeat" /></svg
+          >もう一度吹く</button
+        ><a
+          class="vote-button"
+          id="vote-button"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          ><svg class="icon" aria-hidden="true"><use href="#icon-heart" /></svg
+          >芳乃に投票する<svg class="icon button-arrow" aria-hidden="true">
+            <use href="#icon-arrow" /></svg
+        ></a>
+        <div class="result-share-actions">
+          <button class="share-button text-button" id="share-button">
+            <svg class="icon" aria-hidden="true"><use href="#icon-x" /></svg
+            >Xにシェア
+          </button>
+          <button class="share-button text-button" id="share-preview-button">
+            結果画像を見る
+          </button>
+        </div>
+      </div>
+      <section class="share-view" id="share-view" aria-labelledby="share-title">
+        <button class="share-back text-button" id="share-back">
+          ← 結果に戻る
+        </button>
+        <h2 id="share-title" tabindex="-1">Xにシェア</h2>
+        <div class="share-preview">
+          <img
+            id="share-image"
+            width="1200"
+            height="900"
+            alt="本日のシェアカード"
+            hidden
+          />
+          <p id="share-status" role="status">シェア画像をつくっています…</p>
+          <button class="text-button" id="share-retry" hidden>
+            もう一度つくる
+          </button>
+        </div>
+        <p class="share-note" id="share-note" role="status"></p>
+        <button class="x-post-button" id="share-native" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#icon-x" /></svg>
+          画像つきでXに投稿
+        </button>
+        <a
+          class="share-web"
+          id="share-web"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Xの投稿画面を開く</a
+        >
+        <div class="share-utilities">
+          <a id="share-download" download hidden>画像を保存</a>
+          <button id="share-copy-text">投稿文をコピー</button>
+          <button id="share-copy-image" hidden>画像をコピー</button>
+        </div>
+        <p class="share-image-tip">画像は長押しでも保存できます。</p>
+        <textarea
+          id="share-fallback"
+          readonly
+          aria-label="コピーする投稿文"
+          hidden
+        ></textarea>
+      </section>
+    </dialog>
+
+    <dialog
+      class="modal help-modal"
+      id="help-dialog"
+      aria-labelledby="help-title"
+    >
+      <button
+        class="round-button close-button"
+        id="help-close"
+        aria-label="あそびかたを閉じる"
+      >
+        <svg class="icon"><use href="#icon-close" /></svg></button
+      ><span class="result-overline">ぶおー法螺貝道場</span>
+      <h2 id="help-title">あそびかた</h2>
+      <ol class="instructions">
+        <li>
+          <span>01</span>
+          <div>
+            <strong>マイクを、お借りします。</strong>
+            <p>「法螺貝を吹く」を押して、マイクの使用を許可してください。</p>
+          </div>
+        </li>
+        <li>
+          <span>02</span>
+          <div>
+            <strong>やさしく、ふーっと。</strong>
+            <p>
+              準備ができたら、スマホのマイクに息を吹きかけて。20秒で30文字がふわり。
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>03</span>
+          <div>
+            <strong>ひと息ついたら、おしまい。</strong>
+            <p>
+              息が止まると、今回の記録が届きます。25秒まで届くと、最後の一文字で皆伝に。無理をせず、そなたのペースで。
+            </p>
+          </div>
+        </li>
+      </ol>
+      <div class="help-note">
+        <strong>うまく反応しないときは</strong>
+        <p>
+          静かな場所でマイクに少し近づくか、マイク感度を調整してください。声や周囲の音にも反応することがあります。
+        </p>
+        <p>マイクなしの「おためし」でも遊べます。</p>
+      </div>
+      <p class="privacy-note">
+        音声は録音・保存・送信しません。<br />この端末で、音の大きさや特徴だけを調べます。
+      </p>
+      <button class="primary-button" id="help-done">わかりました</button>
+    </dialog>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <noscript
+      ><div class="noscript-note">
+        この道場で遊ぶには、JavaScriptを有効にしてください。
+      </div></noscript
+    >
+  </body>
+</html>
