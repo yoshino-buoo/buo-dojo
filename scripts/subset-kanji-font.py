@@ -24,8 +24,8 @@ if hashlib.sha256(source.read_bytes()).hexdigest() != SOURCE_SHA256:
 glyphs = json.loads(subprocess.check_output([
     "node", "--input-type=module", "-e",
     'import { OPENING_KANJI, O_KANJI } from "./breath.js";'
-    'import { CONFIG } from "./config.js";'
-    'console.log(JSON.stringify([...OPENING_KANJI, ...O_KANJI, CONFIG.finalKanji]));',
+    'import { CONFIG, TRAINING_CONFIG } from "./config.js";'
+    'console.log(JSON.stringify([...OPENING_KANJI, ...O_KANJI, CONFIG.finalKanji, TRAINING_CONFIG.finalKanji]));',
 ], cwd=ROOT, text=True))
 codepoints = {ord(char) for glyph in glyphs for char in glyph}
 font = TTFont(source, recalcTimestamp=False)

@@ -1,6 +1,6 @@
 # Dojo Kanji
 
-`dojo-kanji.woff2` is a renamed subset of **Noto Serif CJK JP Bold 2.003**. It contains the game's opening characters, candidate pool, and final reward character. Serving this file with the site keeps uncommon kanji in the same typeface across devices without a third-party font request.
+`dojo-kanji.woff2` is a renamed subset of **Noto Serif CJK JP Bold 2.003**. It contains the game's opening characters, candidate pool, and the reward characters for both courses, including 依・田・芳・乃. Serving this file with the site keeps uncommon kanji in the same typeface across devices without a third-party font request.
 
 - Upstream: [notofonts/noto-cjk](https://github.com/notofonts/noto-cjk/tree/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif).
 - Source: `Serif/OTF/Japanese/NotoSerifCJKjp-Bold.otf` at commit `f8d157532fbfaeda587e826d4cd5b21a49186f7c`.

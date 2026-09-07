@@ -495,3 +495,73 @@ test("pagehide on the exact completion boundary settles without a stranded celeb
     env.restore();
   }
 });
+
+test("hidden microphone uses the 73-second course, stops resources, and retains the selected course on replay", async () => {
+  const env = await setup();
+  try {
+    const fixture = streamFixture();
+    env.navigator.mediaDevices = { getUserMedia: async () => fixture.stream };
+    await env.$("training-toggle").emit("click");
+    assert.equal(
+      env.$("speech").textContent,
+      "では、さらなる高みへ参りましょうー",
+    );
+    await env.$("start-button").emit("click");
+    env.tick(0);
+    env.tick(800);
+    env.window.wind = true;
+    env.tick(1000);
+    env.tick(1200);
+    env.tick(26000);
+    assert.equal(env.state, "blowing");
+    await env.$("training-toggle").emit("click"); // A stale/synthetic click cannot alter an active round.
+    assert.equal(env.$("dojo").dataset.training, "true");
+    for (const [at, count] of [
+      [49000, 69],
+      [54000, 70],
+      [59000, 71],
+      [64000, 72],
+    ]) {
+      env.tick(at);
+      assert.equal(env.$("live-count").textContent, String(count));
+      assert.equal(env.state, "blowing");
+    }
+    env.tick(74000);
+    assert.equal(env.state, "celebrating");
+    assert.equal(fixture.track.stopped, true);
+    assert.equal(env.contexts[0].state, "closed");
+    assert.equal(env.frames.size, 0);
+    env.runTimers(4200);
+    assert.equal(env.$("result-time").textContent, "73.0");
+    assert.equal(env.$("result-count").textContent, "73");
+    assert.equal(env.$("result-final-kanji").textContent, "依田芳乃");
+    assert.equal(env.$("result-dialog").dataset.super, "true");
+    await env.$("again-button").emit("click");
+    assert.equal(env.$("dojo").dataset.training, "true");
+    assert.equal(env.$("dojo").dataset.super, "false");
+    env.runTimers(5000);
+    assert.notEqual(env.state, "result");
+  } finally {
+    env.restore();
+  }
+});
+
+test("leaving hidden training on a milestone awards it once and does not grant completion", async () => {
+  const env = await setup();
+  try {
+    await env.$("training-toggle").emit("click");
+    await env.$("demo-button").emit("click");
+    await env.$("hold-button").emit("keydown", { key: "Enter" });
+    env.tick(52900);
+    env.setClock(53000);
+    await env.window.emit("pagehide");
+    assert.equal(env.state, "result");
+    assert.equal(env.$("result-count").textContent, "70");
+    assert.equal(env.$("result-kanji").children.at(-1).textContent, "依");
+    assert.equal(env.$("result-dialog").dataset.super, "false");
+    env.runTimers(80000);
+    assert.equal(env.$("result-count").textContent, "70");
+  } finally {
+    env.restore();
+  }
+});

@@ -1,12 +1,19 @@
 import { test, expect } from "@playwright/test";
 import { OPENING_KANJI, O_KANJI } from "../../breath.js";
-import { CONFIG } from "../../config.js";
+import { CONFIG, TRAINING_CONFIG } from "../../config.js";
 
 test("every game kanji renders from the bundled font without system fallback", async ({
   page,
 }) => {
   await page.goto("/");
-  const glyphs = [...OPENING_KANJI, ...O_KANJI, CONFIG.finalKanji];
+  const glyphs = [
+    ...new Set([
+      ...OPENING_KANJI,
+      ...O_KANJI,
+      CONFIG.finalKanji,
+      ...TRAINING_CONFIG.finalKanji,
+    ]),
+  ];
   await page.evaluate((glyphs) => {
     const list = document.createElement("div");
     list.id = "font-coverage";

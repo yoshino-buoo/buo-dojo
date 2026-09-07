@@ -1,10 +1,10 @@
 import { CONFIG } from "./config.js";
 
 // The first four glyphs form the playful "ぶおー" opening sequence.
-// Following glyphs have the reading オ / お, including kun and uncommon readings.
+// Following glyphs have the reading オ / お / オウ, including uncommon readings.
 // Prefer positive or neutral senses: harmony, nature, places, and everyday objects.
 // Reading references: https://www.kanjipedia.jp/sakuin/onkun/%E3%82%AA
-// https://kanjitisiki.com/yomi-sakuin/05.html (the オ and お sections only).
+// https://kanjitisiki.com/yomi-sakuin/05.html (the オ, お, and オウ sections).
 export const OPENING_KANJI = Object.freeze(["武", "謳", "鶯", "王"]);
 export const O_KANJI = Object.freeze([
   "緒",
@@ -39,41 +39,103 @@ export const O_KANJI = Object.freeze([
   "隖",
   "陓", // An ancient place name.
   "鰞",
+  // オウ expands the pool with plants, birds, water, places and everyday objects.
+  "阿",
+  "央",
+  "応",
+  "汪",
+  "邑",
+  "往",
+  "旺",
+  "欧",
+  "泓",
+  "姶",
+  "瓮",
+  "皇",
+  "桜",
+  "秧",
+  "翁",
+  "凰",
+  "黄",
+  "奥",
+  "黃",
+  "奧",
+  "横",
+  "歐",
+  "橫",
+  "澳",
+  "甌",
+  "鴨",
+  "鴦",
+  "應",
+  "燠",
+  "膺",
+  "甕",
+  "襖",
+  "嚶",
+  "罌",
+  "櫻",
+  "鶲",
+  "鷗",
+  "鷹",
+  "鸚",
 ]);
 
 /** Each round owns its sequence; draw every candidate once before reshuffling. */
 export function* createGlyphSequence(random = Math.random) {
   yield* OPENING_KANJI;
+  let previous = OPENING_KANJI.at(-1);
   while (true) {
     const pool = [...O_KANJI];
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
+    // If future courses need another bag, its first draw cannot repeat the last.
+    if (pool[0] === previous) [pool[0], pool[1]] = [pool[1], pool[0]];
     yield* pool;
+    previous = pool.at(-1);
   }
 }
-export function roundProgress(durationMs) {
+export function roundProgress(durationMs, course = CONFIG) {
   if (!Number.isFinite(durationMs) || durationMs < 0)
     throw new RangeError("Invalid duration");
-  const elapsedMs = Math.min(durationMs, CONFIG.maxBlowSeconds * 1000);
-  const regularMs = CONFIG.regularPhaseSeconds * 1000;
-  const complete = elapsedMs >= CONFIG.maxBlowSeconds * 1000;
+  const elapsedMs = Math.min(durationMs, course.maxBlowSeconds * 1000);
+  const regularMs = course.regularPhaseSeconds * 1000;
+  const complete = elapsedMs >= course.maxBlowSeconds * 1000;
+  const earned = [];
+  let stageStart = regularMs;
+  let stageIndex = 0;
+  for (const stage of course.chargeStages) {
+    if (elapsedMs < stageStart + stage.seconds * 1000) break;
+    earned.push(stage.kanji);
+    stageStart += stage.seconds * 1000;
+    stageIndex++;
+  }
+  const stage = course.chargeStages[stageIndex];
   return {
     elapsedMs,
     regularCount: Math.min(
-      CONFIG.regularGlyphCount,
-      Math.floor((elapsedMs * (CONFIG.regularGlyphCount - 1)) / regularMs) + 1,
+      course.regularGlyphCount,
+      Math.floor((elapsedMs * (course.regularGlyphCount - 1)) / regularMs) + 1,
     ),
     complete,
     charging: elapsedMs >= regularMs && !complete,
-    charge: Math.max(
-      0,
-      Math.min(
-        1,
-        (elapsedMs - regularMs) / (CONFIG.maxBlowSeconds * 1000 - regularMs),
-      ),
-    ),
+    earned,
+    stageIndex,
+    stageKanji: stage?.kanji || "",
+    remaining: stage
+      ? Math.max(
+          0,
+          Math.ceil((stageStart + stage.seconds * 1000 - elapsedMs) / 1000),
+        )
+      : 0,
+    charge: stage
+      ? Math.max(
+          0,
+          Math.min(1, (elapsedMs - stageStart) / (stage.seconds * 1000)),
+        )
+      : 1,
   };
 }
 
@@ -82,14 +144,14 @@ export function isYoshinoRecord(durationMs) {
   return Math.floor(durationMs / 100) === 73;
 }
 
-export function glyphsForDuration(durationMs) {
-  const progress = roundProgress(durationMs);
+export function glyphsForDuration(durationMs, course = CONFIG) {
+  const progress = roundProgress(durationMs, course);
   const sequence = createGlyphSequence();
   const glyphs = Array.from(
     { length: progress.regularCount },
     () => sequence.next().value,
   );
-  if (progress.complete) glyphs.push(CONFIG.finalKanji);
+  glyphs.push(...progress.earned);
   return glyphs;
 }
 

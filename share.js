@@ -12,7 +12,7 @@ export function shareText(result, href) {
 依田芳乃ちゃんと「ぶおおー」してきましたー。
 
 今回の記録は
-【${result.glyphs.length}文字／${seconds}秒】！
+【${result.glyphs.length}文字／${seconds}秒】！${result.training ? `\n🐚 隠し修行モード${result.mastery ? "・超・皆伝 達成！" : ""}` : ""}
 
 そなたもスマホに、ふーっと。👇
 
@@ -107,7 +107,7 @@ export function createResultSharing() {
     $("share-image").hidden = true;
     $("share-image").removeAttribute("src");
     $("share-image").alt =
-      `${result.glyphs.length}文字・${(Math.floor(result.durationMs / 100) / 10).toFixed(1)}秒。${result.glyphs.join("、")}。依田芳乃のシェアカード。${isYoshinoRecord(result.durationMs) ? "依田芳乃の記念印つき。" : ""}`;
+      `${result.glyphs.length}文字・${(Math.floor(result.durationMs / 100) / 10).toFixed(1)}秒。${result.glyphs.join("、")}。依田芳乃のシェアカード。${result.training && result.mastery ? "超・皆伝。" : ""}${isYoshinoRecord(result.durationMs) ? "依田芳乃の記念印つき。" : ""}`;
     $("share-native").hidden = true;
     $("share-native").disabled = false;
     $("share-download").hidden = true;

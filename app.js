@@ -1,4 +1,4 @@
-import { CONFIG } from "./config.js";
+import { CONFIG, TRAINING_CONFIG } from "./config.js";
 import { createResultSharing } from "./share.js";
 import { createBlowHaptics } from "./haptics.js";
 import {
@@ -31,6 +31,7 @@ const activeStates = [
   "demo-ready",
 ];
 let state = "idle",
+  training = false,
   mode = "microphone",
   round = null,
   lastResult = null,
@@ -47,6 +48,9 @@ let holdPointer = null,
 function setState(next) {
   state = next;
   $("dojo").dataset.state = next;
+  $("training-toggle").hidden = next !== "idle";
+  $("status-text").hidden = next === "idle";
+  $("status-dot").hidden = next === "idle";
   const pose = ["blowing", "celebrating"].includes(next)
     ? "c"
     : ["requesting", "calibrating", "listening", "demo-ready"].includes(next)
@@ -137,6 +141,15 @@ function setState(next) {
     $("start-label").textContent = copy[1];
     $("button-note").textContent = copy[2];
     $("speech").textContent = copy[3];
+    if (training && ["idle", "demo-ready"].includes(next))
+      $("speech").textContent = "では、さらなる高みへ参りましょうー";
+    if (training && next === "celebrating") {
+      $("speech").textContent =
+        "……これは、これはー。\nわたくしも驚きましてー……";
+      $("status-text").textContent = "お見事！超・皆伝です";
+      $("start-label").textContent = "超・皆伝！";
+      $("button-note").textContent = "四文字、揃いましてー。";
+    }
   }
 }
 
@@ -175,6 +188,8 @@ function reset() {
   $("charge-cue").hidden = true;
   $("charge-orbit").hidden = true;
   $("finale-effect").hidden = true;
+  $("charge-name").hidden = true;
+  $("dojo").dataset.super = "false";
   setState("idle");
 }
 
@@ -207,6 +222,9 @@ function beginBlow(startedAt) {
     glyphs: [],
     sequence: createGlyphSequence(),
     mode,
+    training,
+    course: training ? TRAINING_CONFIG : CONFIG,
+    earned: [],
   };
   setState("blowing");
   round.animation = characters
@@ -216,9 +234,11 @@ function beginBlow(startedAt) {
   advanceRound(0);
 }
 
-function spawnGlyph(glyph, index) {
+function spawnGlyph(glyph, index, milestone = false) {
   const particle = document.createElement("span");
-  particle.className = "kanji-particle";
+  particle.className = milestone
+    ? "kanji-particle milestone-particle"
+    : "kanji-particle";
   particle.textContent = glyph;
   particle.style.setProperty(
     "--drift",
@@ -235,7 +255,7 @@ function spawnGlyph(glyph, index) {
 
 function advanceRound(elapsedMs) {
   if (!round) return;
-  const progress = roundProgress(Math.max(0, elapsedMs));
+  const progress = roundProgress(Math.max(0, elapsedMs), round.course);
   round.elapsedMs = progress.elapsedMs;
   while (round.glyphs.length < progress.regularCount) {
     const index = round.glyphs.length,
@@ -243,24 +263,46 @@ function advanceRound(elapsedMs) {
     round.glyphs.push(glyph);
     spawnGlyph(glyph, index);
   }
-  if (progress.complete && round.glyphs.length === CONFIG.regularGlyphCount)
-    round.glyphs.push(CONFIG.finalKanji);
+  while (round.earned.length < progress.earned.length) {
+    const glyph = progress.earned[round.earned.length];
+    round.earned.push(glyph);
+    round.glyphs.push(glyph);
+    if (round.training && !progress.complete)
+      spawnGlyph(glyph, round.glyphs.length - 1, true);
+  }
   if (progress.charging) {
-    if ($("dojo").dataset.phase !== "charging") {
+    if (
+      $("dojo").dataset.phase !== "charging" ||
+      round.stageIndex !== progress.stageIndex
+    ) {
+      round.stageIndex = progress.stageIndex;
+      round.remaining = null;
       $("dojo").dataset.phase = "charging";
       $("charge-cue").hidden = false;
       $("charge-orbit").hidden = false;
-      $("status-text").textContent = "あとひと吹きー！";
-      $("button-note").textContent = "花がそろうと、最後のひと文字。";
+      $("status-text").textContent = round.training
+        ? `「${progress.stageKanji}」へ、もうひと吹きー！`
+        : "あとひと吹きー！";
+      $("button-note").textContent = round.training
+        ? "無理せず、そなたのペースで。"
+        : "花がそろうと、最後のひと文字。";
+      $("charge-caption").textContent = round.training
+        ? `隠し修行 · ${progress.stageIndex + 1} / 4`
+        : "最後のひと吹き";
+      $("charge-name").hidden = !round.training;
+      for (let i = 0; i < 4; i++) {
+        $(`name-glyph-${i}`).dataset.earned = String(i < round.earned.length);
+        $(`name-glyph-${i}`).dataset.current = String(
+          i === progress.stageIndex,
+        );
+      }
     }
     $("dojo").style.setProperty("--charge", progress.charge);
     // Changing duration would recalculate every elapsed iteration. Adjust the
     // playback rate instead so acceleration preserves the current pose.
     const period = 0.72 * (1 - progress.charge) + 0.2 * progress.charge;
     round.animation?.updatePlaybackRate(0.72 / period);
-    const remaining = Math.ceil(
-      (CONFIG.maxBlowSeconds * 1000 - round.elapsedMs) / 1000,
-    );
+    const remaining = progress.remaining;
     if (round.remaining !== remaining) {
       round.remaining = remaining;
       $("charge-remaining").textContent = String(remaining);
@@ -287,18 +329,21 @@ function finishRound(elapsedMs = round?.elapsedMs, detail = "") {
   advanceRound(elapsedMs);
   lastResult = {
     mode: round.mode,
+    training: round.training,
     durationMs: round.elapsedMs,
     glyphs: [...round.glyphs],
-    mastery: roundProgress(round.elapsedMs).complete,
+    mastery: roundProgress(round.elapsedMs, round.course).complete,
+    earned: [...round.earned],
     detail,
   };
   stopResources();
   $("charge-cue").hidden = true;
   $("charge-orbit").hidden = true;
   if (lastResult.mastery) {
+    $("dojo").dataset.super = String(lastResult.training);
     round.animation?.updatePlaybackRate(0.72 / 1.5);
     setState("celebrating");
-    $("finale-kanji").textContent = CONFIG.finalKanji;
+    $("finale-kanji").textContent = round.course.finalKanji;
     $("finale-effect").hidden = false;
     const token = generation;
     const reducedMotion = window.matchMedia?.(
@@ -308,7 +353,13 @@ function finishRound(elapsedMs = round?.elapsedMs, detail = "") {
       () => {
         if (generation === token && state === "celebrating") showResult();
       },
-      reducedMotion ? 350 : 1800,
+      lastResult.training
+        ? reducedMotion
+          ? 3200
+          : 4200
+        : reducedMotion
+          ? 350
+          : 1800,
     );
   } else showResult();
 }
@@ -318,37 +369,51 @@ function showResult() {
   $("finale-effect").hidden = true;
   setState("result");
   const yoshinoRecord = isYoshinoRecord(lastResult.durationMs);
+  const superMastery = lastResult.training && lastResult.mastery;
+  $("result-dialog").dataset.training = String(lastResult.training);
+  $("result-dialog").dataset.super = String(superMastery);
   $("result-dialog").dataset.mastery = String(lastResult.mastery);
   $("result-dialog").dataset.yoshino = String(yoshinoRecord);
   $("result-stamp").textContent = yoshinoRecord
     ? "依田\n芳乃"
-    : lastResult.mastery
-      ? "皆伝"
-      : "大変\nよき音";
+    : superMastery
+      ? "超・\n皆伝"
+      : lastResult.mastery
+        ? "皆伝"
+        : "大変\nよき音";
   $("result-stamp").setAttribute("aria-hidden", String(!yoshinoRecord));
   $("mastery-award").hidden = !lastResult.mastery;
   $("result-final-kanji").textContent = lastResult.mastery
-    ? CONFIG.finalKanji
+    ? lastResult.earned.join("")
     : "";
+  $("award-caption").textContent = superMastery
+    ? "四文字、揃いましてー"
+    : "最後の一文字";
+  $("super-achievement").hidden = !superMastery;
   $("result-count").textContent = String(lastResult.glyphs.length);
   $("result-time").textContent = secondsText(lastResult.durationMs);
   $("result-mode").hidden = lastResult.mode !== "demo";
-  $("result-message").textContent = lastResult.mastery
-    ? "見事な、ひと吹きでしてー。"
-    : lastResult.durationMs >= 10000
-      ? "遠くまで、届きましてー。"
-      : "よき響きでしてー。";
+  $("result-message").textContent = superMastery
+    ? "……これは、これはー。\nわたくしも驚きましてー……"
+    : lastResult.mastery
+      ? "見事な、ひと吹きでしてー。"
+      : lastResult.durationMs >= 10000
+        ? "遠くまで、届きましてー。"
+        : "よき響きでしてー。";
   $("result-detail").textContent = lastResult.detail;
   $("result-detail").hidden = !lastResult.detail || lastResult.mastery;
   const regularGlyphs = lastResult.mastery
-    ? lastResult.glyphs.slice(0, -1)
+    ? lastResult.glyphs.slice(0, -lastResult.earned.length)
     : lastResult.glyphs;
   const glyphCount = regularGlyphs.length;
-  const columns = lastResult.mastery
-    ? 6
-    : glyphCount <= 4
-      ? glyphCount
-      : Math.min(8, Math.ceil(Math.sqrt(glyphCount * 1.8)));
+  const columns =
+    lastResult.training && glyphCount > 30
+      ? Math.min(12, Math.ceil(Math.sqrt(glyphCount * 1.8)))
+      : lastResult.mastery
+        ? 6
+        : glyphCount <= 4
+          ? glyphCount
+          : Math.min(8, Math.ceil(Math.sqrt(glyphCount * 1.8)));
   $("result-kanji").style.setProperty("--glyph-columns", columns);
   $("result-kanji").style.setProperty(
     "--glyph-rows",
@@ -358,6 +423,8 @@ function showResult() {
     ...regularGlyphs.map((glyph, index) => {
       const tile = document.createElement("span");
       tile.textContent = glyph;
+      if (lastResult.training && index >= TRAINING_CONFIG.regularGlyphCount)
+        tile.className = "earned-glyph";
       tile.style.setProperty("--i", Math.min(index, 12));
       return tile;
     }),
@@ -377,6 +444,8 @@ function microphoneError(error) {
       "この環境ではマイクを使えません。SafariやChromeで開いてください。",
   };
   reset();
+  $("training-toggle").hidden = true;
+  $("status-text").hidden = false;
   const localizedMessage = /[\u3040-\u30ff]/u.test(error?.message || "")
     ? error.message
     : "";
@@ -445,7 +514,8 @@ async function startMicrophone() {
     source.connect(analyser); // Intentionally never connected to speaker output.
     const detector = new BreathDetector({
       sensitivity: Number($("sensitivity").value),
-      maxDurationMs: CONFIG.maxBlowSeconds * 1000,
+      maxDurationMs:
+        (training ? TRAINING_CONFIG : CONFIG).maxBlowSeconds * 1000,
     });
     const samples = new Float32Array(analyser.fftSize),
       spectrum = new Float32Array(analyser.frequencyBinCount);
@@ -500,7 +570,9 @@ async function startMicrophone() {
       if (event.type === "end") {
         finishRound(
           event.durationMs,
-          event.capped ? `${CONFIG.maxBlowSeconds}秒で終了しました。` : "",
+          event.capped
+            ? `${round.course.maxBlowSeconds}秒で終了しました。`
+            : "",
         );
         return;
       }
@@ -525,7 +597,7 @@ function startHold() {
   const tick = (now) => {
     if (state !== "blowing" || mode !== "demo") return;
     advanceRound(now - round.startedAt);
-    if (round.elapsedMs >= CONFIG.maxBlowSeconds * 1000) {
+    if (round.elapsedMs >= round.course.maxBlowSeconds * 1000) {
       finishRound(round.elapsedMs);
       return;
     }
@@ -548,6 +620,14 @@ function interruptRound() {
   // A round can reach the limit in the same event that backgrounds the page.
   if (state === "celebrating") showResult();
 }
+
+$("training-toggle").addEventListener("click", () => {
+  if (state !== "idle") return;
+  training = !training;
+  $("training-toggle").setAttribute("aria-checked", String(training));
+  $("dojo").dataset.training = String(training);
+  setState("idle");
+});
 
 function updateVibrationToggle() {
   const button = $("vibration-button");

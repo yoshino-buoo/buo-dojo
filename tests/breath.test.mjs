@@ -10,7 +10,7 @@ import {
   OPENING_KANJI,
   O_KANJI,
 } from "../breath.js";
-import { CONFIG } from "../config.js";
+import { CONFIG, TRAINING_CONFIG } from "../config.js";
 
 const quiet = {
   rms: 0.001,
@@ -190,4 +190,67 @@ test("trailing silence cannot earn the final glyph after breath stops at 24.9 se
   assert.equal(end.durationMs, 24900);
   assert.equal(roundProgress(end.durationMs).complete, false);
   assert.equal(glyphsForDuration(end.durationMs).length, 30);
+});
+
+test("hidden course fills 48 seconds without repeats and earns four names at their exact boundaries", () => {
+  assert.ok(O_KANJI.length >= TRAINING_CONFIG.regularGlyphCount - 4);
+  const full = glyphsForDuration(73000, TRAINING_CONFIG);
+  assert.equal(full.length, 73);
+  assert.equal(new Set(full).size, 73);
+  assert.deepEqual(full.slice(0, 4), OPENING_KANJI);
+  assert.deepEqual(full.slice(-4), ["依", "田", "芳", "乃"]);
+  for (const [ms, regular, earned, stage, remaining] of [
+    [47999, 68, "", 0, 6],
+    [48000, 69, "", 0, 5],
+    [52999, 69, "", 0, 1],
+    [53000, 69, "依", 1, 5],
+    [57999, 69, "依", 1, 1],
+    [58000, 69, "依田", 2, 5],
+    [62999, 69, "依田", 2, 1],
+    [63000, 69, "依田芳", 3, 10],
+    [72999, 69, "依田芳", 3, 1],
+    [73000, 69, "依田芳乃", 4, 0],
+  ]) {
+    const progress = roundProgress(ms, TRAINING_CONFIG);
+    assert.equal(progress.regularCount, regular, `${ms}: ordinary`);
+    assert.equal(progress.earned.join(""), earned, `${ms}: earned`);
+    assert.equal(progress.stageIndex, stage, `${ms}: stage`);
+    assert.equal(progress.remaining, remaining, `${ms}: remaining`);
+    assert.equal(progress.complete, ms === 73000);
+  }
+  assert.equal(roundProgress(25000, TRAINING_CONFIG).complete, false);
+  assert.equal(roundProgress(74000, TRAINING_CONFIG).elapsedMs, 73000);
+  for (const ms of [48000, 53000, 58000, 63000])
+    assert.equal(roundProgress(ms, TRAINING_CONFIG).charge, 0);
+  assert.equal(roundProgress(68000, TRAINING_CONFIG).charge, 0.5);
+});
+
+test("a reshuffled bag never starts with the last glyph of the previous bag", () => {
+  let position = 0;
+  const sequence = createGlyphSequence(() =>
+    position++ < O_KANJI.length - 1 ? 0.999999 : 0,
+  );
+  const take = (count) =>
+    Array.from({ length: count }, () => sequence.next().value);
+  take(4);
+  const first = take(O_KANJI.length);
+  const next = take(O_KANJI.length);
+  assert.notEqual(first.at(-1), next[0]);
+  assert.equal(new Set(next).size, O_KANJI.length);
+});
+
+test("hidden microphone limit excludes trailing silence and preserves only earned milestones", () => {
+  const detector = calibrated({ maxDurationMs: 73000 });
+  detector.update(1000, wind);
+  detector.update(1200, wind);
+  assert.equal(detector.update(73900, wind).type, "blowing");
+  const end = detector.update(74000, quiet);
+  assert.equal(end.type, "end");
+  assert.equal(end.durationMs, 72900);
+  assert.deepEqual(roundProgress(end.durationMs, TRAINING_CONFIG).earned, [
+    "依",
+    "田",
+    "芳",
+  ]);
+  assert.equal(roundProgress(end.durationMs, TRAINING_CONFIG).complete, false);
 });

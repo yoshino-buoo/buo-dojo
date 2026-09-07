@@ -17,7 +17,10 @@
       content="芳乃といっしょに、ぶおー！スマホで遊べる法螺貝ゲーム。"
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://yoshino-buoo.github.io/buo-dojo/" />
+    <meta
+      property="og:url"
+      content="https://yoshino-buoo.github.io/buo-dojo/"
+    />
     <meta
       property="og:image"
       content="https://yoshino-buoo.github.io/buo-dojo/assets/link-preview.png"
@@ -101,7 +104,7 @@
       </defs>
     </svg>
 
-    <main class="dojo" id="dojo" data-state="idle">
+    <main class="dojo" id="dojo" data-state="idle" data-training="false">
       <header class="masthead">
         <div class="topline">
           <span class="header-ornament" aria-hidden="true"
@@ -189,7 +192,16 @@
         </div>
         <div class="kanji-particles" id="particles" aria-hidden="true"></div>
         <div class="charge-cue" id="charge-cue" hidden>
-          <span class="charge-caption">最後のひと吹き</span>
+          <span class="charge-caption" id="charge-caption">最後のひと吹き</span>
+          <div
+            class="charge-name"
+            id="charge-name"
+            aria-label="依田芳乃の四文字"
+            hidden
+          >
+            <span id="name-glyph-0">依</span><span id="name-glyph-1">田</span>
+            <span id="name-glyph-2">芳</span><span id="name-glyph-3">乃</span>
+          </div>
           <div class="charge-flowers" aria-hidden="true">
             <span id="charge-flower-1">✿</span
             ><span id="charge-flower-2">✿</span>
@@ -239,8 +251,23 @@
 
       <section class="play-panel" aria-label="あそぶ">
         <div class="status-line">
-          <span class="status-dot" id="status-dot" aria-hidden="true"></span>
-          <p id="status-text" role="status">準備ができたら、はじめましょう</p>
+          <button
+            class="training-toggle"
+            id="training-toggle"
+            type="button"
+            role="switch"
+            aria-checked="false"
+          >
+            <span>🐚 隠し修行モード 🐚</span>
+            <span class="training-switch" aria-hidden="true"></span>
+          </button>
+          <span
+            class="status-dot"
+            id="status-dot"
+            aria-hidden="true"
+            hidden
+          ></span>
+          <p id="status-text" role="status" hidden></p>
         </div>
         <div class="breath-meter" id="breath-meter" hidden>
           <span>息のつよさ</span>
@@ -313,6 +340,9 @@
         </button>
         <h2 id="result-title">お疲れさまでした</h2>
         <p id="result-message">よき響きでしてー。</p>
+        <div class="super-achievement" id="super-achievement" hidden>
+          ✦ 超・皆伝 ✦
+        </div>
         <div class="result-stamp" id="result-stamp" aria-hidden="true">
           大変<br />よき音
         </div>
@@ -329,7 +359,7 @@
             aria-label="今回吹き出した漢字"
           ></div>
           <div class="mastery-award" id="mastery-award" hidden>
-            <span>最後の一文字</span>
+            <span id="award-caption">最後の一文字</span>
             <strong id="result-final-kanji"></strong>
             <span class="award-flower" aria-hidden="true">✿</span>
           </div>
@@ -457,6 +487,9 @@
           静かな場所でマイクに少し近づくか、マイク感度を調整してください。声や周囲の音にも反応することがあります。
         </p>
         <p>マイクなしの「おためし」でも遊べます。</p>
+        <p>
+          「隠し修行モード」では、48秒で69文字。そのあと「依・田・芳・乃」を5・5・5・10秒で奏でると、73秒で超・皆伝に。いつでも「やめる」で終われます。
+        </p>
       </div>
       <p class="privacy-note">
         音声は録音・保存・送信しません。<br />この端末で、音の大きさや特徴だけを調べます。

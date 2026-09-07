@@ -106,7 +106,12 @@ function drawGlyphs(
   ctx,
   glyphs,
   mastery,
-  { areaTop = 472, areaHeight = 290, maxTile = 120 } = {},
+  {
+    areaTop = 472,
+    areaHeight = 290,
+    maxTile = 120,
+    rewardCount = mastery ? 1 : 0,
+  } = {},
 ) {
   const columns =
     glyphs.length <= 4
@@ -115,9 +120,11 @@ function drawGlyphs(
         ? 4
         : glyphs.length <= 20
           ? 5
-          : 8;
+          : glyphs.length > 40
+            ? 12
+            : 8;
   const rows = Math.ceil(glyphs.length / columns);
-  const gap = 10;
+  const gap = glyphs.length > 40 ? 5 : 10;
   const tile = Math.min(
     maxTile,
     (600 - (columns - 1) * gap) / columns,
@@ -132,7 +139,7 @@ function drawGlyphs(
       (inRow * tile + (inRow - 1) * gap) / 2 +
       (i % columns) * (tile + gap);
     const y = top + row * (tile + gap);
-    const reward = mastery && i === glyphs.length - 1;
+    const reward = i >= glyphs.length - rewardCount;
     box(ctx, x, y + 4, tile, tile, 12, reward ? "#d6bd7c" : "#eaddca");
     box(
       ctx,
@@ -334,6 +341,8 @@ export async function renderShareCard(result, pose = "A") {
   ctx.restore();
   box(ctx, 48, 244, 674, 553, 30, null, colors.line);
   text(ctx, "本日の、ひと吹き", 80, 279, 24, colors.teal);
+  if (result.training)
+    text(ctx, "隠し修行", 465, 279, 19, colors.gold, sans, 700, "center");
   if (result.mode === "demo") {
     box(ctx, 568, 260, 119, 34, 17, colors.mint);
     text(ctx, "おためし", 627, 278, 19, colors.teal, sans, 700, "center");
@@ -370,7 +379,22 @@ export async function renderShareCard(result, pose = "A") {
   ctx.stroke();
   ctx.setLineDash([]);
   text(ctx, "奏でた漢字", 385, 444, 23, colors.ink, sans, 700, "center");
-  drawGlyphs(ctx, result.glyphs, result.mastery);
+  if (result.training && result.mastery) {
+    drawGlyphs(ctx, result.glyphs.slice(0, -4), false, {
+      areaTop: 464,
+      areaHeight: 230,
+    });
+    drawGlyphs(ctx, result.glyphs.slice(-4), true, {
+      areaTop: 712,
+      areaHeight: 60,
+      maxTile: 56,
+      rewardCount: 4,
+    });
+  } else {
+    drawGlyphs(ctx, result.glyphs, result.mastery, {
+      rewardCount: result.earned?.length ?? (result.mastery ? 1 : 0),
+    });
+  }
 
   const crop = pose === "A" ? [426, 157, 771, 1123] : [216, 22, 909, 1346];
   const height = 636;
@@ -402,6 +426,9 @@ export async function renderShareCard(result, pose = "A") {
     if (yoshinoRecord) {
       text(ctx, "依田", 0, -23, 42, colors.coral, serif, 700, "center");
       text(ctx, "芳乃", 0, 23, 42, colors.coral, serif, 700, "center");
+    } else if (result.training) {
+      text(ctx, "超・", 0, -24, 29, colors.gold, serif, 700, "center");
+      text(ctx, "皆伝", 0, 21, 40, colors.teal, serif, 700, "center");
     } else {
       text(ctx, "皆伝", 0, 2, 43, colors.teal, serif, 700, "center");
     }
