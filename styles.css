@@ -831,23 +831,19 @@ button:not(:disabled):active,
     transparent 80%
   );
   pointer-events: none;
-  animation: vote-shimmer 4.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation: vote-shimmer 5.2s linear infinite;
 }
 @keyframes vote-shimmer {
-  0%,
-  12% {
-    transform: translateX(-150%) skewX(-20deg);
+  0% {
+    transform: translateX(-75%) skewX(-20deg);
     opacity: 0;
   }
-  23% {
+  10%,
+  90% {
     opacity: 1;
   }
-  62% {
-    opacity: 1;
-  }
-  74%,
   100% {
-    transform: translateX(300%) skewX(-20deg);
+    transform: translateX(195%) skewX(-20deg);
     opacity: 0;
   }
 }
