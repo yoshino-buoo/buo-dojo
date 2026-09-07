@@ -356,8 +356,9 @@ export async function renderShareCard(result, pose = "A") {
   box(ctx, 48, 244, 674, 553, 30, null, colors.line);
   text(ctx, "本日の、ひと吹き", 80, 279, 24, colors.teal);
   if (result.training) {
-    box(ctx, 406, 260, 119, 34, 17, "#f7e5ad");
-    text(ctx, "隠し修行", 465, 278, 19, "#9a742b", sans, 700, "center");
+    const labelX = result.mode === "demo" ? 406 : 568;
+    box(ctx, labelX, 260, 119, 34, 17, "#f7e5ad");
+    text(ctx, "隠し修行", labelX + 59, 278, 19, "#9a742b", sans, 700, "center");
   }
   if (result.mode === "demo") {
     box(ctx, 568, 260, 119, 34, 17, colors.mint);
