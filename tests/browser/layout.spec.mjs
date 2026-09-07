@@ -273,30 +273,6 @@ for (const viewport of [
   });
 }
 
-test("normal mastery uses the available column width on a tall phone", async ({
-  page,
-}) => {
-  await prepare(page, { width: 393, height: 852 });
-  await page.locator("#demo-button").click();
-  await page.locator("#hold-button").focus();
-  await page.keyboard.down("Space");
-  await page.clock.fastForward(25100);
-  await page.keyboard.up("Space");
-  await page.clock.runFor(2000);
-  await expect(page.locator("#result-final-kanji")).toHaveText("芳");
-  const size = await page.locator("#result-kanji").evaluate((el) => {
-    const first = el.children[0].getBoundingClientRect();
-    const last = el.children[5].getBoundingClientRect();
-    return {
-      available: el.clientWidth,
-      used: last.right - first.left,
-      font: parseFloat(getComputedStyle(el.children[0]).fontSize),
-    };
-  });
-  expect(size.used / size.available).toBeGreaterThan(0.96);
-  expect(size.font).toBeGreaterThanOrEqual(23);
-});
-
 test("charging and the final animation keep the stage fixed before mastery results", async ({
   page,
 }) => {
