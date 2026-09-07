@@ -356,18 +356,8 @@ export async function renderShareCard(result, pose = "A") {
   box(ctx, 48, 244, 674, 553, 30, null, colors.line);
   text(ctx, "本日の、ひと吹き", 80, 279, 24, colors.teal);
   if (result.training) {
-    box(
-      ctx,
-      395,
-      259,
-      140,
-      40,
-      9,
-      goldMetal(ctx, 395, 259, 535, 299),
-      "#b98729",
-    );
-    box(ctx, 399, 263, 132, 32, 6, null, "#fff0b3");
-    text(ctx, "隠し修行", 465, 280, 20, "#795014", sans, 700, "center");
+    box(ctx, 406, 260, 119, 34, 17, "#f7e5ad");
+    text(ctx, "隠し修行", 465, 278, 19, "#9a742b", sans, 700, "center");
   }
   if (result.mode === "demo") {
     box(ctx, 568, 260, 119, 34, 17, colors.mint);

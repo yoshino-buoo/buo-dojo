@@ -546,9 +546,12 @@ button:not(:disabled):active,
   font-size: 16px;
   margin-left: 5px;
 }
-.text-button:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+/* Keep hover affordances on devices with a hover-capable pointer. */
+@media (hover: hover) and (pointer: fine) {
+  .text-button:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }
 .breath-meter {
   display: flex;

@@ -396,6 +396,52 @@ test("a late export from a previous round cannot replace the replay card", async
   expect(await page.evaluate(() => window.__staleUrls)).toBe(0);
 });
 
+test.describe("touch preview", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("touch hover does not add a desktop affordance and one tap opens a pending image", async ({
+    page,
+  }) => {
+    await prepare(page, { mobile: true, delayed: true });
+    await finish(page, 7000);
+    const preview = page.locator("#share-preview-button");
+    await preview.hover();
+    expect(
+      await page.evaluate(() => matchMedia("(hover: hover)").matches),
+    ).toBe(false);
+    await expect(preview).toHaveCSS("text-decoration-line", "none");
+    await preview.tap();
+    await expect(page.locator("#result-dialog")).toHaveAttribute(
+      "data-view",
+      "share",
+    );
+    await expect(page.locator("#share-status")).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => Boolean(window.__releaseCard)))
+      .toBe(true);
+    await page.evaluate(() => window.__releaseCard());
+    await expect(page.locator("#share-image")).toBeVisible();
+    await page.locator("#share-back").tap();
+    await preview.tap();
+    await expect(page.locator("#share-image")).toBeVisible();
+  });
+
+  test("one tap opens the image after scrolling a short phone result", async ({
+    page,
+  }) => {
+    await prepare(page, { mobile: true });
+    await page.setViewportSize({ width: 320, height: 568 });
+    await finish(page);
+    await page.locator("#share-preview-button").scrollIntoViewIfNeeded();
+    await page.locator("#share-preview-button").tap();
+    await expect(page.locator("#result-dialog")).toHaveAttribute(
+      "data-view",
+      "share",
+    );
+    await expect(page.locator("#share-image")).toBeVisible();
+  });
+});
+
 test("image export failure keeps the X draft available and retry keeps the same round", async ({
   page,
 }) => {
