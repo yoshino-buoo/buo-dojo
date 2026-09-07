@@ -1108,6 +1108,18 @@ button:not(:disabled):active,
   font-size: 16px;
   min-height: 52px;
 }
+.help-credits {
+  margin-bottom: 22px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  color: #8e7864;
+  font-size: 12px;
+  line-height: 1.9;
+  text-align: center;
+}
+.help-credits p {
+  margin: 0;
+}
 .toast {
   position: fixed;
   left: 50%;
