@@ -783,14 +783,14 @@ button:not(:disabled):active,
   font-size: 16px;
   border-radius: 14px;
 }
-.vote-button {
+.secondary-button {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
+  width: 100%;
   min-height: 51px;
-  margin-top: 16px;
   padding: 12px 34px;
   border: 1px solid #b7cec0;
   border-radius: 14px;
@@ -801,17 +801,64 @@ button:not(:disabled):active,
   font-weight: 700;
   letter-spacing: 0.03em;
 }
-.vote-button .icon {
+.secondary-button .icon {
   width: 18px;
   height: 18px;
 }
-.vote-button:hover {
+.secondary-button:hover {
   background: #e0ecda;
+}
+.vote-button {
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 16px;
+  padding-inline: 34px;
+  text-decoration: none;
+}
+.vote-button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -60% auto -60% 0;
+  width: 48%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d9fff008 20%,
+    #fff4cc30 46%,
+    #ffffff52 50%,
+    #fff4cc20 57%,
+    transparent 80%
+  );
+  pointer-events: none;
+  animation: vote-shimmer 4.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+@keyframes vote-shimmer {
+  0%,
+  12% {
+    transform: translateX(-150%) skewX(-20deg);
+    opacity: 0;
+  }
+  23% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 1;
+  }
+  74%,
+  100% {
+    transform: translateX(300%) skewX(-20deg);
+    opacity: 0;
+  }
 }
 .vote-button[aria-disabled="true"] {
   color: #978575;
   border-color: #e2d5c5;
   background: #f3eee5;
+  box-shadow: none;
+}
+.vote-button[aria-disabled="true"]::before {
+  display: none;
 }
 .result-share-actions {
   display: grid;
@@ -1232,6 +1279,9 @@ button:not(:disabled):active,
   .character-c {
     transform: none !important;
   }
+  .vote-button::before {
+    display: none;
+  }
 }
 
 .play-panel {
@@ -1308,8 +1358,10 @@ button:not(:disabled):active,
   .result-body .primary-button {
     min-height: 49px;
   }
-  .vote-button {
+  .secondary-button {
     min-height: 47px;
+  }
+  .vote-button {
     margin-top: 13px;
   }
   .share-button {
