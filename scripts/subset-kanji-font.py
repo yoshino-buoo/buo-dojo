@@ -6,6 +6,7 @@ Requires fonttools[woff]. See assets/fonts/README.md for download and usage.
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -60,4 +61,15 @@ font.save(output)
 with TTFont(output) as saved:
     if codepoints - saved.getBestCmap().keys():
         raise SystemExit("Subset lost required glyphs.")
+revision = hashlib.sha256(output.read_bytes()).hexdigest()[:12]
+for name in ["styles.css", "index.html"]:
+    document = ROOT / name
+    contents, replacements = re.subn(
+        r'(\./assets/fonts/dojo-kanji\.woff2)(?:\?v=[a-f0-9]+)?',
+        lambda match: match[1] + "?v=" + revision,
+        document.read_text(),
+    )
+    if replacements != 1:
+        raise SystemExit(f"Expected exactly one game font URL in {name}.")
+    document.write_text(contents)
 print(f"Created {output.relative_to(ROOT)}: {len(codepoints)} characters, {output.stat().st_size} bytes")

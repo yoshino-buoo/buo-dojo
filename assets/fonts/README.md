@@ -21,4 +21,4 @@ curl -fL https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda58
 npm run test:layout -- --grep 'every game kanji'
 ```
 
-The script verifies the source checksum, reads the current characters from `breath.js` and `config.js`, and fails if the source font lacks any required character. The browser test checks the font actually used to render every character, detecting fallback even when the declared CSS font family looks correct.
+The script verifies the source checksum, reads the current characters from `breath.js` and `config.js`, and fails if the source font lacks any required character. It also updates the stylesheet and preload font URLs with a content hash so browsers do not reuse an older subset after the pool expands. The browser test verifies this version and the font actually used to render every character, detecting fallback even when the declared CSS font family looks correct.

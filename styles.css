@@ -1,7 +1,7 @@
 @charset "UTF-8";
 @font-face {
   font-family: "Dojo Kanji";
-  src: url("./assets/fonts/dojo-kanji.woff2") format("woff2");
+  src: url("./assets/fonts/dojo-kanji.woff2?v=9b512c4a445f") format("woff2");
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -1674,6 +1674,14 @@ button:not(:disabled):active,
   );
   border-radius: 5px;
 }
+/* Spread normal completion tiles horizontally, keeping the original row heights. */
+.result-modal[data-mastery="true"][data-training="false"] .result-kanji {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.result-modal[data-mastery="true"][data-training="false"] .result-kanji span {
+  width: 100%;
+  font-size: clamp(20px, calc(var(--tile-size) * 0.84), 26px);
+}
 .mastery-award {
   display: flex;
   flex-direction: column;
@@ -1914,23 +1922,27 @@ button:not(:disabled):active,
   line-height: 1.6;
   font-size: 12px;
 }
-.super-achievement {
-  display: inline-block;
-  margin-top: 12px;
-  padding: 5px 22px;
-  border: 1px solid #c0a267;
-  border-radius: 20px;
-  background: linear-gradient(110deg, #f0dfad, #fff8dd, #e6cd90);
-  color: #73602c;
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 17px;
-  letter-spacing: 0.14em;
-}
 .result-modal[data-super="true"] .result-stamp {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.15;
   right: 12px;
+  color: #795014;
+  border-color: #b98729;
+  outline-color: #fff0b3;
+  background: linear-gradient(
+    135deg,
+    #ba8b32 0%,
+    #f1cd6d 20%,
+    #fff4c9 35%,
+    #d9ad4b 50%,
+    #f7df8c 72%,
+    #b68028 100%
+  );
+  text-shadow: 0 1px 0 #fff3c1;
+  box-shadow:
+    0 2px 5px #79511c33,
+    inset 0 1px 1px #fff7d8,
+    inset 0 -2px 3px #a9712c66;
 }
 .result-modal[data-super="true"] .result-collection {
   display: flex;
@@ -1961,11 +1973,6 @@ button:not(:disabled):active,
   .result-modal[data-super="true"] .result-top h2 {
     margin: 8px 0 6px;
     font-size: 24px;
-  }
-  .result-modal[data-super="true"] .super-achievement {
-    margin-top: 7px;
-    padding: 3px 18px;
-    font-size: 14px;
   }
   .result-modal[data-training="true"] .result-kanji span {
     --tile-size: min(
@@ -2023,9 +2030,6 @@ button:not(:disabled):active,
   .result-modal[data-super="true"] #result-message {
     font-size: 11px;
     line-height: 1.45;
-  }
-  .result-modal[data-super="true"] .super-achievement {
-    display: none;
   }
   .result-modal[data-super="true"] .result-body {
     padding-top: 20px;

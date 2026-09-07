@@ -102,6 +102,20 @@ function sparkle(ctx, x, y, radius, color) {
   ctx.fill();
 }
 
+function goldMetal(ctx, x0, y0, x1, y1) {
+  const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+  for (const [stop, color] of [
+    [0, "#ba8b32"],
+    [0.2, "#f1cd6d"],
+    [0.35, "#fff4c9"],
+    [0.5, "#d9ad4b"],
+    [0.72, "#f7df8c"],
+    [1, "#b68028"],
+  ])
+    gradient.addColorStop(stop, color);
+  return gradient;
+}
+
 function drawGlyphs(
   ctx,
   glyphs,
@@ -341,8 +355,20 @@ export async function renderShareCard(result, pose = "A") {
   ctx.restore();
   box(ctx, 48, 244, 674, 553, 30, null, colors.line);
   text(ctx, "本日の、ひと吹き", 80, 279, 24, colors.teal);
-  if (result.training)
-    text(ctx, "隠し修行", 465, 279, 19, colors.gold, sans, 700, "center");
+  if (result.training) {
+    box(
+      ctx,
+      395,
+      259,
+      140,
+      40,
+      9,
+      goldMetal(ctx, 395, 259, 535, 299),
+      "#b98729",
+    );
+    box(ctx, 399, 263, 132, 32, 6, null, "#fff0b3");
+    text(ctx, "隠し修行", 465, 280, 20, "#795014", sans, 700, "center");
+  }
   if (result.mode === "demo") {
     box(ctx, 568, 260, 119, 34, 17, colors.mint);
     text(ctx, "おためし", 627, 278, 19, colors.teal, sans, 700, "center");
@@ -408,27 +434,38 @@ export async function renderShareCard(result, pose = "A") {
 
   // The 7.3-second record and completion each earn their own seal.
   const yoshinoRecord = isYoshinoRecord(result.durationMs);
+  const superMastery = result.training && result.mastery && !yoshinoRecord;
   if (result.mastery || yoshinoRecord) {
     ctx.save();
     ctx.translate(1065, 709);
     ctx.rotate(yoshinoRecord ? 0.16 : -0.16);
-    ctx.fillStyle = "#fffdf2";
+    ctx.fillStyle = superMastery ? goldMetal(ctx, -68, -74, 68, 74) : "#fffdf2";
     ctx.beginPath();
     ctx.arc(0, 0, 74, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = yoshinoRecord ? colors.coral : colors.gold;
+    ctx.strokeStyle = yoshinoRecord
+      ? colors.coral
+      : superMastery
+        ? "#b98729"
+        : colors.gold;
     ctx.lineWidth = 5;
     ctx.stroke();
     ctx.beginPath();
     ctx.arc(0, 0, 64, 0, Math.PI * 2);
     ctx.lineWidth = 2;
+    if (superMastery) ctx.strokeStyle = "#fff0b3";
     ctx.stroke();
     if (yoshinoRecord) {
       text(ctx, "依田", 0, -23, 42, colors.coral, serif, 700, "center");
       text(ctx, "芳乃", 0, 23, 42, colors.coral, serif, 700, "center");
     } else if (result.training) {
-      text(ctx, "超・", 0, -24, 29, colors.gold, serif, 700, "center");
-      text(ctx, "皆伝", 0, 21, 40, colors.teal, serif, 700, "center");
+      ctx.shadowColor = "#fff3c1";
+      ctx.shadowOffsetY = 1;
+      text(ctx, "超・", 0, -24, 29, "#795014", serif, 700, "center");
+      text(ctx, "皆伝", 0, 21, 40, "#795014", serif, 700, "center");
+      ctx.shadowColor = "transparent";
+      sparkle(ctx, -43, -47, 6, "#fff9df");
+      sparkle(ctx, 52, 31, 3, "#fff9df");
     } else {
       text(ctx, "皆伝", 0, 2, 43, colors.teal, serif, 700, "center");
     }

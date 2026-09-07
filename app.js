@@ -381,7 +381,10 @@ function showResult() {
       : lastResult.mastery
         ? "皆伝"
         : "大変\nよき音";
-  $("result-stamp").setAttribute("aria-hidden", String(!yoshinoRecord));
+  $("result-stamp").setAttribute(
+    "aria-hidden",
+    String(!(yoshinoRecord || superMastery)),
+  );
   $("mastery-award").hidden = !lastResult.mastery;
   $("result-final-kanji").textContent = lastResult.mastery
     ? lastResult.earned.join("")
@@ -389,7 +392,6 @@ function showResult() {
   $("award-caption").textContent = superMastery
     ? "四文字、揃いましてー"
     : "最後の一文字";
-  $("super-achievement").hidden = !superMastery;
   $("result-count").textContent = String(lastResult.glyphs.length);
   $("result-time").textContent = secondsText(lastResult.durationMs);
   $("result-mode").hidden = lastResult.mode !== "demo";

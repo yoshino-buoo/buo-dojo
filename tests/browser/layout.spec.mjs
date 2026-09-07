@@ -1,10 +1,17 @@
 import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { OPENING_KANJI, O_KANJI } from "../../breath.js";
 import { CONFIG, TRAINING_CONFIG } from "../../config.js";
 
 test("every game kanji renders from the bundled font without system fallback", async ({
   page,
 }) => {
+  const fontRequests = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname.endsWith("/dojo-kanji.woff2"))
+      fontRequests.push(new URL(request.url()));
+  });
   await page.goto("/");
   const glyphs = [
     ...new Set([
@@ -26,6 +33,17 @@ test("every game kanji renders from the bundled font without system fallback", a
     document.body.append(list);
   }, glyphs);
   await page.evaluate(() => document.fonts.ready);
+
+  // A changed subset must not reuse an older cached font that lacks new glyphs.
+  const fontBytes = await readFile(
+    new URL("../../assets/fonts/dojo-kanji.woff2", import.meta.url),
+  );
+  const revision = createHash("sha256")
+    .update(fontBytes)
+    .digest("hex")
+    .slice(0, 12);
+  expect(fontRequests).toHaveLength(1);
+  expect(fontRequests[0].searchParams.get("v")).toBe(revision);
 
   // Computed font-family and document.fonts.check do not detect missing glyphs.
   // Inspect the fonts that Chromium actually used for each rendered character.
@@ -272,6 +290,32 @@ for (const viewport of [
       );
   });
 }
+
+test("normal mastery spreads six columns across the left area without increasing its height", async ({
+  page,
+}) => {
+  await prepare(page, { width: 393, height: 852 });
+  await page.locator("#demo-button").click();
+  await page.locator("#hold-button").focus();
+  await page.keyboard.down("Space");
+  await page.clock.fastForward(25100);
+  await page.keyboard.up("Space");
+  await page.clock.runFor(2000);
+  const size = await page.locator("#result-kanji").evaluate((el) => {
+    const boxes = [...el.children].map((tile) => tile.getBoundingClientRect());
+    return {
+      width: el.clientWidth,
+      used: boxes[5].right - boxes[0].left,
+      height: el.clientHeight,
+      rows: new Set(boxes.map((box) => box.top)).size,
+      font: parseFloat(getComputedStyle(el.children[0]).fontSize),
+    };
+  });
+  expect(size.used / size.width).toBeGreaterThan(0.98);
+  expect(size.height).toBeLessThanOrEqual(153);
+  expect(size.rows).toBe(5);
+  expect(size.font).toBeGreaterThanOrEqual(22);
+});
 
 test("charging and the final animation keep the stage fixed before mastery results", async ({
   page,

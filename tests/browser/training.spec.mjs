@@ -71,7 +71,12 @@ test("hidden switch preserves layout and all four stages, then returns to normal
   await page.keyboard.up("Space");
   await page.clock.runFor(4400);
   await expect(page.locator("#result-overline")).toHaveText("本日の、ひと吹き");
-  await expect(page.locator("#super-achievement")).toHaveText("✦ 超・皆伝 ✦");
+  await expect(page.locator("#super-achievement")).toHaveCount(0);
+  await expect(page.locator("#result-stamp")).toHaveText("超・\n皆伝");
+  await expect(page.locator("#result-stamp")).toHaveAttribute(
+    "aria-hidden",
+    "false",
+  );
   await expect(page.locator("#result-time")).toHaveText("73.0");
   await expect(page.locator("#result-count")).toHaveText("73");
   await expect(page.locator("#result-final-kanji")).toHaveText("依田芳乃");
