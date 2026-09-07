@@ -4,6 +4,7 @@ import {
   BreathDetector,
   analyzeSignal,
   createGlyphSequence,
+  isYoshinoRecord,
   roundProgress,
 } from "./breath.js";
 
@@ -297,8 +298,15 @@ function showResult() {
   clearTimeout(finaleTimer);
   $("finale-effect").hidden = true;
   setState("result");
+  const yoshinoRecord = isYoshinoRecord(lastResult.durationMs);
   $("result-dialog").dataset.mastery = String(lastResult.mastery);
-  $("result-stamp").textContent = lastResult.mastery ? "皆伝" : "大変\nよき音";
+  $("result-dialog").dataset.yoshino = String(yoshinoRecord);
+  $("result-stamp").textContent = yoshinoRecord
+    ? "依田\n芳乃"
+    : lastResult.mastery
+      ? "皆伝"
+      : "大変\nよき音";
+  $("result-stamp").setAttribute("aria-hidden", String(!yoshinoRecord));
   $("mastery-award").hidden = !lastResult.mastery;
   $("result-final-kanji").textContent = lastResult.mastery
     ? CONFIG.finalKanji

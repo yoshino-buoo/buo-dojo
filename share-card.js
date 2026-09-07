@@ -1,3 +1,5 @@
+import { isYoshinoRecord } from "./breath.js";
+
 export const CARD_SIZE = Object.freeze({ width: 1200, height: 900 });
 const colors = {
   paper: "#fffaf3",
@@ -380,23 +382,29 @@ export async function renderShareCard(result, pose = "A") {
   ctx.drawImage(character, ...crop, 948 - width / 2, 134, width, height);
   ctx.restore();
 
-  // Completion earns a wax-seal style badge.
-  if (result.mastery) {
+  // The 7.3-second record and completion each earn their own seal.
+  const yoshinoRecord = isYoshinoRecord(result.durationMs);
+  if (result.mastery || yoshinoRecord) {
     ctx.save();
     ctx.translate(1065, 709);
-    ctx.rotate(-0.16);
+    ctx.rotate(yoshinoRecord ? 0.16 : -0.16);
     ctx.fillStyle = "#fffdf2";
     ctx.beginPath();
     ctx.arc(0, 0, 74, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = colors.gold;
+    ctx.strokeStyle = yoshinoRecord ? colors.coral : colors.gold;
     ctx.lineWidth = 5;
     ctx.stroke();
     ctx.beginPath();
     ctx.arc(0, 0, 64, 0, Math.PI * 2);
     ctx.lineWidth = 2;
     ctx.stroke();
-    text(ctx, "皆伝", 0, 2, 43, colors.teal, serif, 700, "center");
+    if (yoshinoRecord) {
+      text(ctx, "依田", 0, -23, 42, colors.coral, serif, 700, "center");
+      text(ctx, "芳乃", 0, 23, 42, colors.coral, serif, 700, "center");
+    } else {
+      text(ctx, "皆伝", 0, 2, 43, colors.teal, serif, 700, "center");
+    }
     ctx.restore();
   }
 

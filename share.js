@@ -1,4 +1,5 @@
 import { CONFIG } from "./config.js";
+import { isYoshinoRecord } from "./breath.js";
 import { renderShareCard } from "./share-card.js";
 
 export function shareText(result, href) {
@@ -106,7 +107,7 @@ export function createResultSharing() {
     $("share-image").hidden = true;
     $("share-image").removeAttribute("src");
     $("share-image").alt =
-      `${result.glyphs.length}文字・${(Math.floor(result.durationMs / 100) / 10).toFixed(1)}秒。${result.glyphs.join("、")}。依田芳乃のシェアカード。`;
+      `${result.glyphs.length}文字・${(Math.floor(result.durationMs / 100) / 10).toFixed(1)}秒。${result.glyphs.join("、")}。依田芳乃のシェアカード。${isYoshinoRecord(result.durationMs) ? "依田芳乃の記念印つき。" : ""}`;
     $("share-native").hidden = true;
     $("share-native").disabled = false;
     $("share-download").hidden = true;

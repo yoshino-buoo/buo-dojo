@@ -5,6 +5,7 @@ import {
   analyzeSignal,
   createGlyphSequence,
   glyphsForDuration,
+  isYoshinoRecord,
   roundProgress,
   OPENING_KANJI,
   O_KANJI,
@@ -73,6 +74,13 @@ test("30 regular glyphs fill 20 seconds, then the final glyph arrives exactly at
   assert.throws(() => glyphsForDuration(-1), RangeError);
   assert.throws(() => roundProgress(NaN), RangeError);
 });
+test("the Yoshino seal belongs only to records displayed as 7.3 seconds", () => {
+  for (const duration of [7300, 7300.01, 7350, 7399.999])
+    assert.equal(isYoshinoRecord(duration), true, `${duration}ms`);
+  for (const duration of [0, 7299.999, 7400, 17300, 25000])
+    assert.equal(isYoshinoRecord(duration), false, `${duration}ms`);
+});
+
 test("quiet input never starts a round", () => {
   const detector = calibrated();
   for (let now = 820; now < 8000; now += 20)

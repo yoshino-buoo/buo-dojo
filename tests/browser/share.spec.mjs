@@ -215,6 +215,67 @@ test("card exports the exact round, full kanji list, and a stable random A/B pos
   );
 });
 
+test("7.3-second seals match the displayed record and exported artwork, then reset on replay", async ({
+  page,
+}, testInfo) => {
+  await prepare(page);
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  for (const [duration, seconds, stamp, pose] of [
+    [7299, "7.2", "大変\nよき音", "A"],
+    [7300, "7.3", "依田\n芳乃", "A"],
+    [7399, "7.3", "依田\n芳乃", "B"],
+    [7400, "7.4", "大変\nよき音", "B"],
+    [25000, "25.0", "皆伝", "B"],
+  ]) {
+    await page.evaluate((pose) => {
+      Math.random = () => (pose === "A" ? 0 : 0.999999);
+      window.__cardText = [];
+    }, pose);
+    await finish(page, duration);
+    await expect(page.locator("#result-time")).toHaveText(seconds);
+    await expect(page.locator("#result-stamp")).toHaveText(stamp);
+    await expect(page.locator("#result-overline")).toHaveText(
+      "本日の、ひと吹き",
+    );
+    const special = seconds === "7.3";
+    await expect(page.locator("#result-dialog")).toHaveAttribute(
+      "data-yoshino",
+      String(special),
+    );
+    await expect(page.locator("#result-stamp")).toHaveAttribute(
+      "aria-hidden",
+      String(!special),
+    );
+    if (special)
+      await page.screenshot({
+        path: testInfo.outputPath(`yoshino-result-${pose}.png`),
+      });
+    await openCard(page);
+    const drawn = await page.evaluate(() =>
+      window.__cardText.map((item) => item.text),
+    );
+    expect(drawn.includes("依田")).toBe(special);
+    expect(drawn.includes("芳乃")).toBe(special);
+    await expect(page.locator("#share-view")).toHaveAttribute(
+      "data-pose",
+      pose,
+    );
+    if (special) {
+      await expect(page.locator("#share-image")).toHaveAttribute(
+        "alt",
+        /依田芳乃の記念印つき/,
+      );
+      const downloaded = page.waitForEvent("download");
+      await page.locator("#share-download").click();
+      await (
+        await downloaded
+      ).saveAs(testInfo.outputPath(`yoshino-card-${pose}.png`));
+    }
+    await page.locator("#share-back").click();
+    await page.locator("#again-button").click();
+  }
+});
+
 test("mobile shares a real PNG and caption inside the tap activation; cancellation has no side effects", async ({
   page,
   context,

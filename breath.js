@@ -77,6 +77,11 @@ export function roundProgress(durationMs) {
   };
 }
 
+/** Match the displayed 7.3 seconds, which truncates to one decimal place. */
+export function isYoshinoRecord(durationMs) {
+  return Math.floor(durationMs / 100) === 73;
+}
+
 export function glyphsForDuration(durationMs) {
   const progress = roundProgress(durationMs);
   const sequence = createGlyphSequence();

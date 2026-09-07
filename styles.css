@@ -1572,6 +1572,15 @@ button:not(:disabled):active,
 .result-stamp {
   white-space: pre-line;
 }
+.result-modal[data-yoshino="true"] .result-stamp {
+  color: #c65b50;
+  border-color: #c65b50;
+  outline-color: #c65b50;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
 .result-modal[data-mastery="true"] {
   border-color: #cbb675;
 }
