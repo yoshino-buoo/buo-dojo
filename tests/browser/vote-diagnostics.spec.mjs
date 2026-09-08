@@ -23,7 +23,8 @@ for (const cancelClick of [false, true]) {
   test(`diagnostic observes ${cancelClick ? "cancelled" : "native"} clicks without changing navigation`, async ({ page }) => {
     const external = [];
     page.on("request", (request) => {
-      if (!request.url().startsWith("http://localhost:4173/") &&
+      if (/^https?:/.test(request.url()) &&
+          !request.url().startsWith("http://localhost:4173/") &&
           !request.url().startsWith("https://idolmaster-official.jp/")) {
         external.push(request.url());
       }
