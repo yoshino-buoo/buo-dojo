@@ -30,8 +30,10 @@ test("hidden switch preserves layout and all four stages, then returns to normal
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 852 });
-  await page.clock.install();
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await page.goto("/");
+  // Keep real-time timer callbacks from racing the repeated manual jumps.
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   const toggle = page.locator("#training-toggle");
   await expect(toggle).toHaveAttribute("aria-checked", "false");
   const stage = await page.locator(".stage").boundingBox();
@@ -70,6 +72,7 @@ test("hidden switch preserves layout and all four stages, then returns to normal
   );
   await page.keyboard.up("Space");
   await page.clock.runFor(4400);
+  await expect(page.locator("#result-dialog")).toBeVisible();
   await expect(page.locator("#result-overline")).toHaveText("本日の、ひと吹き");
   await expect(page.locator("#super-achievement")).toHaveCount(0);
   await expect(page.locator("#result-stamp")).toHaveText("超・\n皆伝");
