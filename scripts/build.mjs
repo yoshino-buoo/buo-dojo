@@ -1,5 +1,5 @@
 import { mkdir, rm, cp, stat, readFile, writeFile } from "node:fs/promises";
-import { renderVoteCheck } from "./vote-check.mjs";
+import { renderVoteCheck, renderVoteProbe } from "./vote-check.mjs";
 const files = [
   "index.html",
   "styles.css",
@@ -30,4 +30,11 @@ await writeFile(
     await readFile("diagnostics/vote.js", "utf8"),
   ),
 );
+const probeSource = await readFile("diagnostics/vote-probe.js", "utf8");
+for (const mode of ["control", "pointer"]) {
+  await writeFile(
+    `dist/vote-${mode}.html`,
+    renderVoteProbe(await readFile("index.html", "utf8"), probeSource, mode),
+  );
+}
 console.log("Static site built in dist/ — ready for GitHub Pages.");

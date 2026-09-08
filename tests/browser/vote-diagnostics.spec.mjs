@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { renderVoteCheck } from "../../scripts/vote-check.mjs";
+import { renderVoteCheck, renderVoteProbe } from "../../scripts/vote-check.mjs";
 
 const html = await readFile(new URL("../../index.html", import.meta.url), "utf8");
 const diagnostic = await readFile(new URL("../../diagnostics/vote.js", import.meta.url), "utf8");
+const probe = await readFile(new URL("../../diagnostics/vote-probe.js", import.meta.url), "utf8");
 
 test.use({
   hasTouch: true,
@@ -18,6 +19,31 @@ test("normal page never loads the diagnostic observer", async ({ page }) => {
   await expect(page.locator("#vote-diagnostics")).toHaveCount(0);
   expect(requests.some((url) => url.includes("/diagnostics/"))).toBe(false);
 });
+
+for (const mode of ["control", "pointer"]) {
+  test(`${mode} probe preserves native voting and has no diagnostic wrapper`, async ({ page }) => {
+    await page.route(`**/vote-${mode}.html`, (route) => route.fulfill({
+      contentType: "text/html", body: renderVoteProbe(html, probe, mode),
+    }));
+    await page.context().route("https://idolmaster-official.jp/**", (route) =>
+      route.fulfill({ contentType: "text/html", body: "<title>Vote destination</title>" }),
+    );
+    await page.goto(`/vote-${mode}.html`);
+    await expect(page.locator("#vote-diagnostics")).toHaveCount(0);
+    expect(await page.evaluate(() => navigator.sendBeacon.toString())).toContain("[native code]");
+    await page.locator("#demo-button").tap();
+    await page.locator("#hold-button").focus();
+    await page.keyboard.down("Space");
+    await page.waitForTimeout(800);
+    await page.keyboard.up("Space");
+    await expect(page.locator("#result-dialog")).toBeVisible();
+    const popupReady = page.waitForEvent("popup");
+    await page.locator("#vote-button").tap();
+    const popup = await popupReady;
+    await expect(popup).toHaveURL(/vote\/idol\/yorita_yoshino/);
+    await popup.close();
+  });
+}
 
 for (const cancelClick of [false, true]) {
   test(`diagnostic observes ${cancelClick ? "cancelled" : "native"} clicks without changing navigation`, async ({ page }) => {
