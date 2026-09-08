@@ -27,6 +27,6 @@ export const TRAINING_CONFIG = Object.freeze({
 /** Public analytics identifiers. Never put account/API credentials here. */
 export const ANALYTICS = Object.freeze({
   hostname: "yoshino-buoo.github.io",
-  beaconToken: "f11134e874a644b1929d42a2e3441869",
+  beaconToken: "45646076e598405fa5327545f0d2e92e",
   eventsUrl: "https://buo-dojo-events.yoshino-buoo.workers.dev/events",
 });

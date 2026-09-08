@@ -1,7 +1,7 @@
 import { CONFIG, TRAINING_CONFIG } from "./config.js";
 import { createResultSharing } from "./share.js";
 import { createBlowHaptics } from "./haptics.js";
-import { createGameAnalytics } from "./analytics.js?v=e8e06b3ac260";
+import { createGameAnalytics } from "./analytics.js?v=3da7ec42a278";
 import {
   BreathDetector,
   analyzeSignal,

@@ -1,4 +1,4 @@
-import { ANALYTICS } from "./config.js?v=28c5de0ebe5a";
+import { ANALYTICS } from "./config.js?v=0d3ba8098ba8";
 
 /** Best-effort statistics: never delay a result or an outgoing vote link. */
 export function createGameAnalytics({
