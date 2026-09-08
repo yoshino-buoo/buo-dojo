@@ -55,7 +55,7 @@ test.describe("touch vote link", () => {
       await vote.evaluate(
         (el) => getComputedStyle(el, "::before").animationName,
       ),
-    ).toBe("vote-shimmer");
+    ).toBe("vote-shimmer-background");
     const popupReady = page.waitForEvent("popup");
     await vote.tap();
     const popup = await popupReady;

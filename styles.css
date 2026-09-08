@@ -876,11 +876,12 @@ button:not(:disabled):active,
 .vote-button::before {
   content: "";
   position: absolute;
-  z-index: -1;
-  inset: -60% auto -60% 0;
-  width: 48%;
-  background: linear-gradient(
-    90deg,
+  z-index: 0;
+  inset: 0;
+  width: auto;
+  /* Paint the slant into the gradient so it does not depend on a transform. */
+  background-image: linear-gradient(
+    110deg,
     transparent,
     #d9fff008 20%,
     #fff4cc30 46%,
@@ -888,21 +889,18 @@ button:not(:disabled):active,
     #fff4cc20 57%,
     transparent 80%
   );
+  background-repeat: no-repeat;
+  background-size: 48% 220%;
+  background-position: -100% 50%;
   pointer-events: none;
-  animation: vote-shimmer 5.2s linear infinite;
+  animation: vote-shimmer-background 5.2s linear infinite;
 }
-@keyframes vote-shimmer {
-  0% {
-    transform: translateX(-75%) skewX(-20deg);
-    opacity: 0;
+@keyframes vote-shimmer-background {
+  from {
+    background-position: -69.23077% 50%;
   }
-  10%,
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(195%) skewX(-20deg);
-    opacity: 0;
+  to {
+    background-position: 180% 50%;
   }
 }
 .vote-button[aria-disabled="true"] {

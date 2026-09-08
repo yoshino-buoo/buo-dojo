@@ -1,9 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { readFile } from "node:fs/promises";
-import { renderShimmerCheck } from "../../scripts/shimmer-check.mjs";
-
-const html = await readFile(new URL("../../index.html", import.meta.url), "utf8");
-const css = await readFile(new URL("../../diagnostics/shimmer.css", import.meta.url), "utf8");
 
 test.use({
   isMobile: true,
@@ -14,14 +9,11 @@ test.use({
 
 for (const training of [false, true]) {
   test(`background shimmer keeps moving after repeated ${training ? "hidden" : "normal"} results`, async ({ page }) => {
-    await page.route("**/shimmer-check.html", route => route.fulfill({
-      contentType: "text/html", body: renderShimmerCheck(html, css),
-    }));
     await page.context().route("https://idolmaster-official.jp/**", route => route.fulfill({
       contentType: "text/html", body: "<title>Vote destination</title>",
     }));
     await page.clock.install();
-    await page.goto("/shimmer-check.html");
+    await page.goto("/");
     if (training) await page.locator("#training-toggle").tap();
     await page.locator("#demo-button").tap();
     for (let round = 0; round < 3; round++) {
