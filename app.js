@@ -741,6 +741,78 @@ for (const dialog of document.querySelectorAll("dialog")) {
       hideModal(dialog);
   });
 }
+function enableVoteTouch(link) {
+  let gesture = null;
+  const cancel = () => {
+    gesture = null;
+  };
+  link.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length !== 1) return cancel();
+      const touch = event.touches[0];
+      gesture = {
+        id: touch.identifier,
+        x: touch.clientX,
+        y: touch.clientY,
+        startedAt: performance.now(),
+      };
+    },
+    { passive: true },
+  );
+  link.addEventListener(
+    "touchmove",
+    (event) => {
+      if (!gesture) return;
+      const touch = Array.from(event.touches).find(
+        (item) => item.identifier === gesture.id,
+      );
+      if (
+        !touch ||
+        event.touches.length !== 1 ||
+        Math.hypot(touch.clientX - gesture.x, touch.clientY - gesture.y) > 10
+      )
+        cancel();
+    },
+    { passive: true },
+  );
+  link.addEventListener("touchcancel", cancel, { passive: true });
+  link.addEventListener("contextmenu", cancel);
+  document.addEventListener("scroll", cancel, { capture: true, passive: true });
+  link.addEventListener(
+    "touchend",
+    (event) => {
+      const tap = gesture;
+      cancel();
+      if (
+        !tap ||
+        event.defaultPrevented ||
+        !event.cancelable ||
+        event.touches.length ||
+        performance.now() - tap.startedAt > 500 ||
+        link.getAttribute("aria-disabled") === "true" ||
+        !link.hasAttribute("href")
+      )
+        return;
+      const touch = Array.from(event.changedTouches).find(
+        (item) => item.identifier === tap.id,
+      );
+      if (
+        !touch ||
+        Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) > 10 ||
+        !link.contains(document.elementFromPoint(touch.clientX, touch.clientY))
+      )
+        return;
+      // iOS can withhold its synthesized click after a touch. Activate within
+      // this user gesture, then suppress that later click to avoid two tabs or
+      // duplicate analytics. The regular anchor click still owns navigation.
+      event.preventDefault();
+      link.click();
+    },
+    { passive: false },
+  );
+}
+
 let voteUrl;
 try {
   const candidate = new URL(CONFIG.voteUrl);
@@ -751,6 +823,7 @@ try {
 }
 if (voteUrl) {
   $("vote-button").href = voteUrl;
+  enableVoteTouch($("vote-button"));
   $("vote-button").addEventListener("click", () =>
     analytics.recordVote(lastResult),
   );

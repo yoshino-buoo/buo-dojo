@@ -150,6 +150,42 @@ test.describe("touch voting", () => {
     contextOptions: { reducedMotion: "no-preference" },
   });
 
+  test("a completed tap opens the vote link even when its native compatibility click is withheld", async ({
+    page,
+  }) => {
+    const { events } = await prepare(page);
+    await page.locator("#demo-button").tap();
+    await play(page, 1000);
+    await expect(page.locator("#result-dialog")).toBeVisible();
+    // Desktop WebKit does not run iOS's content-change click heuristic. Inject
+    // its observable failure at the event boundary: no native click reaches
+    // the link after a valid touch, while touchend is still delivered.
+    await page.evaluate(() => {
+      document.addEventListener(
+        "click",
+        (event) => {
+          if (event.isTrusted && event.target.closest("#vote-button")) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        },
+        true,
+      );
+    });
+    const popupReady = page
+      .waitForEvent("popup", { timeout: 2000 })
+      .catch(() => null);
+    await page.locator("#vote-button").tap();
+    const popup = await popupReady;
+    expect(popup).not.toBeNull();
+    await expect(popup).toHaveURL(/vote\/idol\/yorita_yoshino/);
+    await popup.close();
+    await page.clock.runFor(1000);
+    await expect
+      .poll(() => events.filter((event) => event.kind === "vote").length)
+      .toBe(1);
+  });
+
   test("touch devices do not apply desktop hover colors to the result actions", async ({
     page,
   }) => {
@@ -174,6 +210,73 @@ test.describe("touch voting", () => {
       await button.hover();
       await expect(button).toHaveCSS("background-color", initial);
     }
+  });
+
+  test("scrolling, long presses, multitouch and cancelled gestures do not open the vote link", async ({
+    page,
+  }) => {
+    const { events } = await prepare(page);
+    await page.locator("#demo-button").tap();
+    await play(page, 1000);
+    const vote = page.locator("#vote-button");
+    await expect(page.locator("#result-dialog")).toBeVisible();
+    await vote.scrollIntoViewIfNeeded();
+    await page.evaluate(() => {
+      const link = document.querySelector("#vote-button");
+      window.__voteClicks = 0;
+      link.addEventListener("click", () => window.__voteClicks++);
+      window.__touchVote = (type, contacts, changed = contacts) => {
+        const box = link.getBoundingClientRect();
+        const touch = ([identifier, dx = 0, dy = 0]) =>
+          new Touch({
+            identifier,
+            target: link,
+            clientX: box.x + box.width / 2 + dx,
+            clientY: box.y + box.height / 2 + dy,
+          });
+        link.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: contacts.map(touch),
+            changedTouches: changed.map(touch),
+          }),
+        );
+      };
+      // A finger may move away and return; that remains a drag, not a tap.
+      window.__touchVote("touchstart", [[1]]);
+      window.__touchVote("touchmove", [[1, 0, 30]]);
+      window.__touchVote("touchmove", [[1]]);
+      window.__touchVote("touchend", [], [[1]]);
+      window.__touchVote("touchstart", [[1]]);
+      window.__touchVote("touchcancel", [], [[1]]);
+      window.__touchVote("touchend", [], [[1]]);
+      window.__touchVote("touchstart", [[1]]);
+      window.__touchVote("touchstart", [[1], [2, 20]]);
+      window.__touchVote("touchend", [[2, 20]], [[1]]);
+      window.__touchVote("touchend", [], [[2, 20]]);
+      window.__touchVote("touchstart", [[1]]);
+      document.dispatchEvent(new Event("scroll"));
+      window.__touchVote("touchend", [], [[1]]);
+      window.__touchVote("touchstart", [[1]]);
+      link.dispatchEvent(new MouseEvent("contextmenu"));
+      window.__touchVote("touchend", [], [[1]]);
+      window.__touchVote("touchstart", [[1]]);
+    });
+    await page.clock.runFor(600);
+    await page.evaluate(() => window.__touchVote("touchend", [], [[1]]));
+    expect(await page.evaluate(() => window.__voteClicks)).toBe(0);
+    expect(events.filter((event) => event.kind === "vote")).toHaveLength(0);
+
+    const popupReady = page.waitForEvent("popup");
+    await vote.tap();
+    const popup = await popupReady;
+    await expect(popup).toHaveURL(/vote\/idol\/yorita_yoshino/);
+    await popup.close();
+    expect(await page.evaluate(() => window.__voteClicks)).toBe(1);
+    await expect
+      .poll(() => events.filter((event) => event.kind === "vote").length)
+      .toBe(1);
   });
 
   for (const training of [false, true]) {
