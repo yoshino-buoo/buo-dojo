@@ -513,8 +513,10 @@ button:not(:disabled):active,
     transform 0.12s,
     box-shadow 0.12s;
 }
-.primary-button:not(:disabled):hover {
-  background: #d5564e;
+@media (hover: hover) and (pointer: fine) {
+  .primary-button:not(:disabled):hover {
+    background: #d5564e;
+  }
 }
 .primary-button:not(:disabled):active {
   box-shadow:
@@ -610,8 +612,10 @@ button:not(:disabled):active,
     0 5px 0 #24665f,
     0 8px 16px #568b7726;
 }
-.hold-button:not(:disabled):hover {
-  background: #287a73;
+@media (hover: hover) and (pointer: fine) {
+  .hold-button:not(:disabled):hover {
+    background: #287a73;
+  }
 }
 .hold-button:not(:disabled):active {
   box-shadow: 0 2px 0 #24665f;
@@ -863,8 +867,10 @@ button:not(:disabled):active,
   width: 18px;
   height: 18px;
 }
-.secondary-button:hover {
-  background: #e0ecda;
+@media (hover: hover) and (pointer: fine) {
+  .secondary-button:hover {
+    background: #e0ecda;
+  }
 }
 .vote-button {
   isolation: isolate;
@@ -1293,8 +1299,10 @@ button:not(:disabled):active,
     0 9px 20px #17839820,
     inset 0 1px 0 #ffffff40;
 }
-.primary-button:not(:disabled):hover {
-  background: #117b90;
+@media (hover: hover) and (pointer: fine) {
+  .primary-button:not(:disabled):hover {
+    background: #117b90;
+  }
 }
 .primary-button:not(:disabled):active {
   box-shadow:

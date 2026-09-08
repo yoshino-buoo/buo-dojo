@@ -142,3 +142,85 @@ test("blocked analytics never prevent settling, voting or replaying", async ({
   );
   expect(errors).toEqual([]);
 });
+
+test.describe("touch voting", () => {
+  test.use({
+    hasTouch: true,
+    isMobile: true,
+    contextOptions: { reducedMotion: "no-preference" },
+  });
+
+  test("touch devices do not apply desktop hover colors to the result actions", async ({
+    page,
+  }) => {
+    await prepare(page);
+    await page.locator("#demo-button").tap();
+    await play(page, 1000);
+    await expect(page.locator("#result-dialog")).toBeVisible();
+    expect(
+      await page.evaluate(() => matchMedia("(hover: hover)").matches),
+    ).toBe(false);
+    // Remove interpolation only, so the assertion inspects the resolved hover
+    // style rather than racing the start of its background transition.
+    await page.addStyleTag({
+      content: "button, a { transition: none !important; }",
+    });
+    for (const id of ["vote-button", "again-button"]) {
+      const button = page.locator(`#${id}`);
+      await page.mouse.move(0, 0);
+      const initial = await button.evaluate(
+        (el) => getComputedStyle(el).backgroundColor,
+      );
+      await button.hover();
+      await expect(button).toHaveCSS("background-color", initial);
+    }
+  });
+
+  for (const training of [false, true]) {
+    test(`one tap navigates and counts once from the ${training ? "hidden" : "normal"} result with the shimmer running`, async ({
+      page,
+    }) => {
+      const { events } = await prepare(page);
+      await page.setViewportSize({ width: 320, height: 568 });
+      if (training) await page.locator("#training-toggle").tap();
+      await page.locator("#demo-button").tap();
+      await play(page, training ? 73000 : 1000);
+      if (training) await page.clock.runFor(4400);
+      await expect(page.locator("#result-dialog")).toBeVisible();
+      const vote = page.locator("#vote-button");
+      await vote.scrollIntoViewIfNeeded();
+      expect(
+        await vote.evaluate((el) => {
+          const shine = getComputedStyle(el, "::before");
+          return {
+            animation: shine.animationName,
+            pointerEvents: shine.pointerEvents,
+          };
+        }),
+      ).toEqual({ animation: "vote-shimmer", pointerEvents: "none" });
+
+      const popupReady = page.waitForEvent("popup");
+      await vote.tap();
+      const popup = await popupReady;
+      await expect(popup).toHaveURL(/vote\/idol\/yorita_yoshino/);
+      await popup.close();
+      await expect
+        .poll(() => events.filter((event) => event.kind === "vote").length)
+        .toBe(1);
+      expect(events.filter((event) => event.kind === "result")).toHaveLength(1);
+    });
+  }
+});
+
+test("desktop voting keeps its hover feedback", async ({ page }) => {
+  await prepare(page);
+  await page.locator("#demo-button").click();
+  await play(page, 1000);
+  const vote = page.locator("#vote-button");
+  await expect(page.locator("#result-dialog")).toBeVisible();
+  expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(
+    true,
+  );
+  await vote.hover();
+  await expect(vote).toHaveCSS("background-color", "rgb(17, 123, 144)");
+});
