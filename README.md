@@ -68,6 +68,7 @@ Linux 环境可使用 `npx playwright install --with-deps chromium` 安装浏览
 ├── index.html                 # 页面结构与日语文案
 ├── styles.css                 # 样式、响应式布局和动画
 ├── app.js                     # 游戏交互、麦克风生命周期与分享
+├── touch.js                   # iOS 短按反馈与首次点击兼容处理
 ├── breath.js                  # 吹气检测与汉字序列
 ├── haptics.js                 # 与吹奏动画同步的轻震反馈
 ├── analytics.js               # 正式站点的访问、结算与投票点击统计
