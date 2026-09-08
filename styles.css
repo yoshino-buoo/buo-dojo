@@ -513,7 +513,7 @@ button:not(:disabled):active,
     transform 0.12s,
     box-shadow 0.12s;
 }
-.primary-button:not(:disabled):hover {
+.primary-button:not(:disabled):not(.vote-button):hover {
   background: #d5564e;
 }
 .primary-button:not(:disabled):active {
@@ -1293,8 +1293,13 @@ button:not(:disabled):active,
     0 9px 20px #17839820,
     inset 0 1px 0 #ffffff40;
 }
-.primary-button:not(:disabled):hover {
+.primary-button:not(:disabled):not(.vote-button):hover {
   background: #117b90;
+}
+@media (hover: hover) and (pointer: fine) {
+  .vote-button:not([aria-disabled="true"]):hover {
+    background: #117b90;
+  }
 }
 .primary-button:not(:disabled):active {
   box-shadow:
