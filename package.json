@@ -9,7 +9,7 @@
     "build:preview": "node scripts/render-link-preview.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:layout": "playwright test",
-    "check": "node --check app.js && node --check breath.js && node --check haptics.js && node --check config.js && node --check share.js && node --check share-card.js && node --check analytics.js && node --check analytics-worker/worker.js"
+    "check": "node --check app.js && node --check breath.js && node --check haptics.js && node --check config.js && node --check share.js && node --check share-card.js"
   },
   "engines": {
     "node": ">=20"
