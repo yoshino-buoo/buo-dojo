@@ -21,7 +21,7 @@
 
 ## 技术栈
 
-使用原生 HTML、CSS 和 JavaScript，麦克风检测基于 Web Audio API。网站不依赖后端服务或第三方运行时库，使用相对资源路径，可部署至 GitHub Pages 等静态托管平台。
+使用原生 HTML、CSS 和 JavaScript，麦克风检测基于 Web Audio API。游戏本身独立运行，使用相对资源路径，可部署至 GitHub Pages 等静态托管平台。可选的访问与游戏统计使用 Cloudflare Web Analytics 和 Workers + D1；统计不可用时仍可正常游玩。
 
 开发与测试使用 Node.js、Node.js Test Runner 和 Playwright。
 
@@ -70,6 +70,8 @@ Linux 环境可使用 `npx playwright install --with-deps chromium` 安装浏览
 ├── app.js                     # 游戏交互、麦克风生命周期与分享
 ├── breath.js                  # 吹气检测与汉字序列
 ├── haptics.js                 # 与吹奏动画同步的轻震反馈
+├── analytics.js               # 正式站点的访问、结算与投票点击统计
+├── analytics-worker/          # Cloudflare 统计接口、数据库结构和查看说明
 ├── config.js                  # 游戏配置
 ├── share.js                   # X 分享、图片保存与复制
 ├── share-card.js              # Canvas 绘制本次成绩分享卡
@@ -80,6 +82,8 @@ Linux 环境可使用 `npx playwright install --with-deps chromium` 安装浏览
 ```
 
 ## 配置
+
+访问量、普通/隐藏模式结算、成绩与投票入口点击的统计配置和查看方式见 [统计说明](analytics-worker/README.md)。
 
 主要设置位于 [`config.js`](config.js)：
 

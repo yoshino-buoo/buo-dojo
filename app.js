@@ -1,6 +1,7 @@
 import { CONFIG, TRAINING_CONFIG } from "./config.js";
 import { createResultSharing } from "./share.js";
 import { createBlowHaptics } from "./haptics.js";
+import { createGameAnalytics } from "./analytics.js";
 import {
   BreathDetector,
   analyzeSignal,
@@ -11,6 +12,7 @@ import {
 
 const $ = (id) => document.getElementById(id);
 const resultSharing = createResultSharing();
+const analytics = createGameAnalytics();
 const haptics = createBlowHaptics(
   typeof navigator.vibrate === "function"
     ? navigator.vibrate.bind(navigator)
@@ -337,6 +339,7 @@ function finishRound(elapsedMs = round?.elapsedMs, detail = "") {
     detail,
   };
   stopResources();
+  analytics.recordResult(lastResult);
   $("charge-cue").hidden = true;
   $("charge-orbit").hidden = true;
   if (lastResult.mastery) {
@@ -746,8 +749,15 @@ try {
 } catch {
   /* Awaiting voting destination. */
 }
-if (voteUrl) $("vote-button").href = voteUrl;
-else {
+if (voteUrl) {
+  $("vote-button").href = voteUrl;
+  $("vote-button").addEventListener("click", () =>
+    analytics.recordVote(lastResult),
+  );
+  $("vote-button").addEventListener("auxclick", (event) => {
+    if (event.button === 1) analytics.recordVote(lastResult);
+  });
+} else {
   $("vote-button").removeAttribute("href");
   $("vote-button").removeAttribute("target");
   $("vote-button").setAttribute("aria-disabled", "true");
